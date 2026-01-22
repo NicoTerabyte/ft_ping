@@ -63,4 +63,4 @@ Comunque per darti un'idea una regola in makefile è strutturata così
 Target: requisito
 
 # Fonti
-![makefile](https://makefiletutorial.com/#-wildcard-1)
+[guida alla creazione di un makefile](https://makefiletutorial.com/#-wildcard-1)
