@@ -14,7 +14,7 @@ void	setup_packet_to_zero(t_icmp_packet	*packet)
 
 int	raw_socket_setup(t_icmp_packet *packet)
 {
-	packet->sock_r = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+	packet->sock_r = socket(AF_PACKET, SOCK_RAW, htons(IPPROTO_ICMP));
 
 	if (packet->sock_r < 0)
 	{
