@@ -10,9 +10,12 @@
 #include <netdb.h>
 #include <sys/select.h>
 #include <net/ethernet.h>
+#include <netinet/ip.h>
+// -------- mandatory? --------
+#include <linux/if_ether.h>
+// ----------------------------
 #include <string.h>
 #include <signal.h>
-
 // defines for type of reply for ICMP protocol
 #define ECHO_REPLY   0
 #define ECHO_REQUEST 8
@@ -53,14 +56,22 @@
 
 typedef struct s_icmp_packet
 {
-	int						sock_r;
+//--------- Special types ---------
 	struct sockaddr			saddr;
-	unsigned char			*buffer;
+	struct ethhdr			*eth; //this IS the ethernet header
+//---------------------------------
+
+	int						sock_r;
+	unsigned char			*buffer; // for ethernet header
+	ssize_t					buflen;
 } t_icmp_packet;
 
 // icmp_packet create_raw_socket();
+void	setup_packet_to_zero(t_icmp_packet	*packet);
 int		raw_socket_setup(t_icmp_packet *packet);
 int		receive_raw_data(t_icmp_packet *packet);
 void	sighandler(int signum);
+void	free_anything(t_icmp_packet *packet);
 
+void	print_eth(t_icmp_packet *packet);
 #endif
