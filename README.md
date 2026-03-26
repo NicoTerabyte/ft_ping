@@ -11,7 +11,7 @@ echo request type = 8
 reply = 0
 
 l'utilizzo di telnet e nc vuol dire che stai utilizzando protocolli tcp/udp under the hood.
-Quindi il mio obiettivo sarebbe quello di mandare.
+Quindi il mio obiettivo sarebbe quello di mandare un file con protocollo icmp quindi non dev'essere intercettato da telnet o nc
 
 lavorare con rawbits
 il bit è costruito così:

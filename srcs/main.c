@@ -25,17 +25,19 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
-	if (raw_socket_setup(&packet))
+	setup_packet_to_zero(&packet);
+	if (icmp_socket_setup(&packet))
 	{
 		printf("%s", SHREK);
 		free_anything(&packet);
 		exit(1);
 	}
-	receive_raw_data(&packet);
+	//receive_raw_data(&packet); ONLY FOR SNIFFING AT LEVEL 2
 	printf("tests passed all initialized\n");
 
-	printf("checking ethernet header\n");
-	print_eth(&packet);
+	// this was useful for the raw socket
+	// printf("checking ethernet header\n");
+	// print_eth(&packet);
 
 	while (1)
 	{
