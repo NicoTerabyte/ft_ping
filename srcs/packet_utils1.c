@@ -1,7 +1,7 @@
 #include "./includes/utils.h"
 
 //just for self knowledge
-void	setup_raw_socket(t_raw_socket_sniffer_packet *packet)
+int		setup_raw_socket(t_raw_socket_sniffer_packet *packet)
 {
 	packet->sock_r = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	if (packet->sock_r < 0)
@@ -9,6 +9,7 @@ void	setup_raw_socket(t_raw_socket_sniffer_packet *packet)
 		perror("FAILED ON CREATING SOCKET \n %s", SHREK);
 		return (-1);
 	}
+	return (0);
 }
 
 //this is to receive data network packets
@@ -62,7 +63,7 @@ void	free_anything_raw_socket(t_raw_socket_sniffer_packet *packet)
 }
 
 // extraction of ethernet header
-void	print_eth(t_icmp_packet *packet) //?not useful anymore
+void	print_eth(t_raw_socket_sniffer_packet *packet) //?not useful anymore
 {
 	printf("\nEthernet Header\n");
 	printf("\t|-Source Address : %.2X-%.2X-%.2X-%.2X-%.2X-%.2X\n", packet->eth->h_source[0],packet->eth->h_source[1],packet->eth->h_source[2],packet->eth->h_source[3],packet->eth->h_source[4],packet->eth->h_source[5]);

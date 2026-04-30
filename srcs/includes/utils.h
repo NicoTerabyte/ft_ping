@@ -86,7 +86,7 @@ typedef struct s_raw_socket_sniffer_packet
 
 //--------- ICMP RELATED ---------
 int		icmp_socket_setup(t_icmp_packet *packet);
-void	print_eth(t_icmp_packet *packet);
+void	print_eth(t_raw_socket_sniffer_packet *packet);
 void	get_ip_header(t_icmp_packet *packet);
 
 //--------------------------------
@@ -97,6 +97,8 @@ void	setup_packet_to_zero(t_icmp_packet	*packet);
 
 //------------- raw socket related --------------
 int		raw_socket_setup(t_raw_socket_sniffer_packet *packet);
+int		setup_raw_socket(t_raw_socket_sniffer_packet *packet);
+
 int		receive_raw_data(t_raw_socket_sniffer_packet *packet);
 void	free_anything_raw_socket(t_raw_socket_sniffer_packet *packet);
 void	extract_ip_header_from_raw_packet(t_raw_socket_sniffer_packet *packet);

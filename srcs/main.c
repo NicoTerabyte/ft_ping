@@ -14,7 +14,8 @@
 
 int main(int argc, char **argv)
 {
-	t_icmp_packet	packet;
+	t_icmp_packet				packet;
+	t_raw_socket_sniffer_packet	sniffer;
 
 	signal(SIGINT, sighandler);
 	(void)argv;
