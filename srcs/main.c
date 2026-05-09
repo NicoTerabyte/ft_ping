@@ -9,6 +9,8 @@
 //il FQDN è www.google.com
 
 // è tutto da costruire?
+// dns è da intepretare
+// checksum da calcolare?
 
 
 

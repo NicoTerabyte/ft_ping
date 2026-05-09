@@ -84,10 +84,11 @@ typedef struct s_raw_socket_sniffer_packet
 	int						sock_r;
 	unsigned char			*buffer; // for ethernet header
 	ssize_t					buflen;
+	char					*dns;
 } t_raw_socket_sniffer_packet;
 
 //--------- ICMP RELATED ---------
-int		icmp_socket_setup(t_icmp_packet *packet);
+int		icmp_socket_setup(t_icmp_packet *packet); //!add dns attr
 void	print_eth(t_raw_socket_sniffer_packet *packet);
 void	get_ip_header(t_icmp_packet *packet);
 
