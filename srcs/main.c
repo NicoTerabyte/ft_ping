@@ -8,6 +8,7 @@
 // 64 bytes from wz-in-f105.1e100.net (192.178.204.105): icmp_seq=1 ttl=107 time=57.9 ms
 //il FQDN è www.google.com
 
+// è tutto da costruire?
 
 
 
@@ -15,7 +16,8 @@
 int main(int argc, char **argv)
 {
 	t_icmp_packet				packet;
-	t_raw_socket_sniffer_packet	sniffer;
+	//TODO:
+	// t_raw_socket_sniffer_packet	sniffer;
 
 	signal(SIGINT, sighandler);
 	(void)argv;
@@ -39,6 +41,7 @@ int main(int argc, char **argv)
 	// this was useful for the raw socket
 	// printf("checking ethernet header\n");
 	// print_eth(&packet);
+
 
 	while (1)
 	{

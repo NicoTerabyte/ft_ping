@@ -1,10 +1,8 @@
 # ft_ping
 Back on the grind. A 42 School project. the aim of the project is to emulate the ping command. The subject says: "Ping is the name of a command that allows you to test the accessibility of another machine through the IP network. The command also measures the time taken to receive a response, called the round-trip time."
 
-
 Ping lavora al livello 3 del modello OSI
 ![alt text](https://www.network-supply.com/cdn/shop/articles/ChatGPT_Image_Sep_15_2025_11_29_37_AM.png?v=1757953612)
-
 
 La comunicazione di ping è gestita grazie a un echo request seguito da un echo reply
 echo request type = 8
@@ -15,12 +13,21 @@ Quindi il mio obiettivo sarebbe quello di mandare un file con protocollo icmp qu
 
 lavorare con rawbits
 il bit è costruito così:
-Tipo - Codice - 
+Tipo 8bit- Codice 8bit - checksum 16bit
+        extended header 32bit
+data_payload (size definita da utente)
 
-# Parentesi sui Makefile praticamente un cheatsheet per crearne uno spiegato da Lollo per Lollo
+![alt text](/img_for_readme/icmp_packet.png)
+
+l'icmp pare in grado di generare questi "quench messages" che servono a scartare i pacchetti che sono andati persi o hanno fallito in qualche modo
+
+quindi quando avrai creato il pacchetto col protocollo corretto dovrai popolarlo seguento questo regolamento
+
+## riguardo a ping
+
+## Parentesi sui Makefile praticamente un cheatsheet per crearne uno spiegato da Lollo per Lollo
 
 Allora essendo che non tocco il basso livello da un po' di tempo mi sono ritrovato in questa situazione abbastanza normale direi che semplicemente non mi ricordo nullla.
-
 
 Innanzitutto perché creare un mankefile invece che uno script in bash?
 La risposta veloce: è più efficiente
@@ -89,6 +96,7 @@ quindi nel nostro esempio sopra la prima regola che verrà eseguita è quella pe
 la regola successiva per esempio all ha bisogno di PROGRAM_NAME per funzionare → PROGRAM_NAME ha bisogno dei file oggetto e così via abbiamo già spiegato come viene costruita la variabile OBJS
 
 ## shortcut o cose che non sembrano aver senso pt1
+
 hai visto $@ $< rispettivamente uno rappresenta il target e l'altro il requisito
 Quindi se io avessi
 Target: requisito
@@ -112,11 +120,13 @@ echo $< touch hey one: touch one two: touch two clean: rm -f hey one two
 ```
 
 .PHONY viene usato semplicemente perché così eviti di utilizzare parole chiave che potrebbero essere usate dal terminale.
-# Fonti
+
+## Fonti
+
 [guida alla creazione di un makefile](https://makefiletutorial.com)
 
+### Libraries
 
-## Libraries
 wenet.h
 sockaddress.h ecc
 
@@ -133,3 +143,8 @@ hmp
 
 time to live [bonus] è una flag.
 Eval sheet -> time to live basso
+
+## Obiettivi
+
+* prima simulazione del comando ping concentrarci sull'invio del messaggio quindi echo 8 e risposta echo 0
+* gestione di raw sockets per sniffing di pacchetti

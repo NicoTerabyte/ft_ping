@@ -17,9 +17,11 @@
 #include <string.h>
 #include <signal.h>
 // defines for type of reply for ICMP protocol
-#define ECHO_REPLY   0
-#define ECHO_REQUEST 8
-
+#define ECHO_REPLY        0
+#define ECHO_REQUEST      8
+#define REDIRECT_MESSAGE  5
+#define TIME_EXCEEDED     11
+#define PARAMETER_PROBLEM 12
 
 #define SHREK " ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀           ⢀⣀⣠⣤⣤⣤⣤⣤⣄⣀\n\
 ⠀⠀⢀⣴⣶⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡴⠶⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⠶⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
@@ -89,7 +91,7 @@ int		icmp_socket_setup(t_icmp_packet *packet);
 void	print_eth(t_raw_socket_sniffer_packet *packet);
 void	get_ip_header(t_icmp_packet *packet);
 
-//--------------------------------
+//------------- UTILS -------------------
 void	sighandler(int signum);
 void	free_anything(t_icmp_packet *packet);
 

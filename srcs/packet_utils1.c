@@ -1,4 +1,5 @@
 #include "./includes/utils.h"
+#include <stdio.h>
 
 //just for self knowledge
 int		setup_raw_socket(t_raw_socket_sniffer_packet *packet)
@@ -6,13 +7,15 @@ int		setup_raw_socket(t_raw_socket_sniffer_packet *packet)
 	packet->sock_r = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	if (packet->sock_r < 0)
 	{
-		perror("FAILED ON CREATING SOCKET \n %s", SHREK);
+		perror("FAILED ON CREATING SOCKET \n");
+		perror(SHREK);
 		return (-1);
 	}
 	return (0);
 }
 
 //this is to receive data network packets
+//raw socket impl
 int		receive_raw_data(t_raw_socket_sniffer_packet *packet)
 {
 	// unsigned char	*buffer;
@@ -34,9 +37,10 @@ int		receive_raw_data(t_raw_socket_sniffer_packet *packet)
 	return (0);
 }
 
+//raw socket impl
 void	extract_ip_header_from_raw_packet(t_raw_socket_sniffer_packet *packet)
 {
-	//todo not mandatory though
+	//TODO not mandatory though
 	(void)packet;
 }
 
