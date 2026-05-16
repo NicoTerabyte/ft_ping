@@ -1,4 +1,5 @@
 #include "./includes/utils.h"
+#include <stdio.h>
 
 
 //print to emulate
@@ -12,7 +13,7 @@
 // dns è da intepretare
 // checksum da calcolare?
 
-
+int	loop_var = 0;
 
 
 int main(int argc, char **argv)
@@ -29,9 +30,8 @@ int main(int argc, char **argv)
 		printf("%s", SHREK);
 		exit(0);
 	}
-
 	setup_packet_to_zero(&packet);
-	if (icmp_socket_setup(&packet))
+	if (icmp_socket_setup(&packet, argv[1]))
 	{
 		printf("%s", SHREK);
 		free_anything(&packet);
@@ -43,12 +43,26 @@ int main(int argc, char **argv)
 	// this was useful for the raw socket
 	// printf("checking ethernet header\n");
 	// print_eth(&packet);
+	int res_of_dns = resolve_address_to_ip(&packet);
+	printf("resolution of dns went: %d\n", res_of_dns);
+	if (res_of_dns == 0)
+	{
+		print_dns(packet);
+	}
+	else
+	{
+		free_anything(&packet);
+		printf("GOOFY AHH ERROR WHILE RESOLVING THE ADDRESS\n");
+		printf(PACKET_ERROR);
+		exit(1);
+	}
 
 
-	while (1)
+	while (loop_var == 0)
 	{
 		printf("sending packet....\n");
 		sleep(1);
 	}
+	free_anything(&packet);
 	return (0);
 }

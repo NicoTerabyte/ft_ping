@@ -48,7 +48,8 @@ void sighandler(int signum)
 {
 	printf("Got signal %d ping statistics coming soon....", signum);
 	// function to cleanup malloc'd data
-	exit(0);
+
+	loop_var = 1;
 }
 
 void	free_anything(t_icmp_packet *packet)
@@ -58,6 +59,15 @@ void	free_anything(t_icmp_packet *packet)
 		free(packet->buffer);
 		printf("To implement....");
 	}
+	if (packet && packet->dns_name)
+		free(packet->dns_name);
+	// !this generates an error if the address is fake
+	if (packet && packet->result)
+		freeaddrinfo(packet->result);
+
+	printf("%s", OK_CHECKOUT);
+	// if (packet)
+	// 	free(packet);
 }
 
 void	free_anything_raw_socket(t_raw_socket_sniffer_packet *packet)

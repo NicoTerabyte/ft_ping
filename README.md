@@ -25,6 +25,8 @@ quindi quando avrai creato il pacchetto col protocollo corretto dovrai popolarlo
 
 ## riguardo a ping
 
+Ora mi concetrerò a tradurre l'indirizzo di dominio: questo lo deve fare il dns.
+
 ## Parentesi sui Makefile praticamente un cheatsheet per crearne uno spiegato da Lollo per Lollo
 
 Allora essendo che non tocco il basso livello da un po' di tempo mi sono ritrovato in questa situazione abbastanza normale direi che semplicemente non mi ricordo nullla.

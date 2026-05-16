@@ -1,21 +1,27 @@
 #ifndef UTILS_H
 #define UTILS_H
-
+// -------- standard --------
 #include <stdio.h>
 #include <stdlib.h>
 #include <error.h>
 #include <unistd.h>
 #include <signal.h>
+#include <string.h>
+// ------- socket programming --------
 #include <sys/socket.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #include <sys/select.h>
 #include <net/ethernet.h>
 #include <netinet/ip.h>
+// ----------------------------
 // -------- mandatory? --------
 #include <linux/if_ether.h>
 // ----------------------------
-#include <string.h>
+// -------- signals --------
 #include <signal.h>
+// ----------------------------
+
 // defines for type of reply for ICMP protocol
 #define ECHO_REPLY        0
 #define ECHO_REQUEST      8
@@ -56,19 +62,69 @@
 ⣿⣿⣿⣿⣿⣿⡆⠀⠸⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠋⠓⠀⠠⠄⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠴⠟⠉⠀⠀⠀⠀⠀⠀⣀⣼⣿⠟⠁⣾⣿⣧⣼⣏⢿⣯⡀⣽⠃⣾⠁\n\
 ⣿⣿⣿⣿⣿⣿⣿⡄⠀⢹⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠈⠁⠐⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣤⣼⡿⠋⢀⣾⣇⠈⣿⣏⣻⡟⠉⣿⢋⣿⠛⣷"
 
+
+#define PACKET_ERROR "⡐⢂⠒⢤⡲⣴⣀⠀⠘⢬⢻⡥⠐⢠⠒⠐⠂⢂⣒⣠⣒⡄⣃⠂⠆⡐⡀⢂⠰⠐⢢⠘⢤⢃⠆⠐⡄⢂⡐⢀⢂⡐⠠⢂⠐⡀⢂⠐⡀⢂⠐⡀⢂⠐⡀⠆⡐⢂⠒⡐⢢⢁⠒⡄⢂\n\
+⢌⠢⡉⢖⡹⢺⣽⣂⠀⠨⠓⠀⣈⣤⣴⣶⣿⣿⠿⣭⠣⡍⡐⢈⠐⠀⠄⠁⢂⠉⠤⢉⠂⢎⠜⠀⠠⣁⠐⠂⠄⠠⡁⢂⠐⠠⢁⠂⡐⠄⢂⠐⠀⢂⠐⠰⠀⠅⠊⢀⠣⢌⠢⢘⠠\n\
+⠢⡑⢌⠢⣍⢱⡻⡜⢀⣠⣶⣿⣯⣿⣿⣿⠿⣭⠻⡔⢣⠐⡁⠄⢈⠀⠂⢈⠀⠠⠀⠀⠈⠈⠘⠀⠃⠀⠊⠌⡐⠡⠐⠠⢈⠐⡀⢂⠐⡈⠄⠠⢁⠠⠈⠄⢁⡠⠎⢆⠱⢊⡔⢡⠂\n\
+⠡⡍⢆⠣⢌⠠⢉⣴⢿⣯⣿⣿⣿⣿⣟⢾⡹⢆⡛⠬⣁⠂⠄⠐⠀⠠⠈⠀⡀⠂⢀⠁⠠⠀⠀⣠⢀⣀⣀⠤⡀⠁⠈⠡⠆⠠⠰⠄⠒⠀⡜⠀⢢⠀⠡⠂⡘⠤⡙⢄⠣⢌⠰⢃⡌\n\
+⡑⠸⢌⠣⠌⢠⡾⣫⣿⣿⣿⣿⣿⣻⠽⣎⢳⠩⡌⠱⢀⠀⠀⠀⠀⠀⠀⠄⠀⠐⠀⡀⠂⢀⠀⡇⢸⣿⢣⠘⡱⢆⠄⠀⠀⡀⠀⠈⠀⢀⠀⠀⠀⠀⠀⠀⠅⠀⢐⠈⠒⡈⢆⠣⣒\n\
+⣈⠱⡈⠅⣰⡿⣰⣿⣿⣿⣿⣿⡗⣯⢻⣌⢇⠳⡈⠅⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠂⠀⢀⠀⠀⢃⠸⢯⠁⠀⠀⠊⠆⠀⠀⠄⡁⠂⢀⠂⢀⠠⠀⠠⠀⠀⠀⠀⠀⠀⠔⠰⠆⠄⠀\n\
+⠠⢁⠐⢰⡿⣰⣿⣿⣿⣿⣿⣿⣏⣟⢧⡚⣌⢣⠘⠠⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣧⣈⠀⠀⠐⠈⠀⢀⠈⠄⠠⢁⠠⠀⠂⠀⠄⠁⡀⠁⢈⠀⠄⠀⠀⠀⡀⠐⠂\n\
+⠐⠂⢀⣿⢳⣿⣿⣿⣿⣿⣿⣿⡷⣺⢧⡛⣤⠃⢎⠁⠄⠀⠂⠀⠄⠂⠀⡀⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠠⠐⢈⠠⠈⠄⢁⠠⠀⠂⢁⠀⠂⠠⠀⢈⠀⠠⠀⠌⠀⠂⠀⠄⠀\n\
+⠘⡀⢸⠇⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⡟⣧⣘⠛⡄⠘⠀⠀⢀⠀⠀⠀⠄⠀⠀⠠⠀⠀⠀⠀⠀⠀⠀⠀⡘⠀⡀⠄⡀⠄⠃⡘⠀⡀⢃⠘⠀⡀⠘⠀⠠⠀⠀⠄⠠⢀⠘⠀⠃⡘⠀\n\
+⠂⠀⣼⡄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡽⣲⢅⡋⠄⠡⠀⣀⠀⠀⠀⠈⠀⠠⠈⢀⠠⠀⠐⠀⠀⠠⠀⢁⠠⠐⠠⠐⠀⠄⠡⠐⠠⠐⡀⠌⠐⡀⠌⠠⠁⠄⠁⠂⡐⠀⠂⢁⠠⢀⠀\n\
+⢆⠁⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢵⡓⢎⠘⣠⡴⠛⡀⠀⠀⠀⠀⠁⠠⠐⠀⠀⡐⠀⠈⠀⡁⢀⠂⠐⡈⠐⢈⠐⡈⠄⡁⢂⠡⠐⡈⠐⠠⢀⠁⢂⠈⠄⡁⠠⢈⠐⠀⡀⠄⠀\n\
+⢏⡆⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠏⢉⣤⠾⣫⠴⢋⣤⡶⠆⠀⠀⠀⠄⠀⠂⠁⠀⠠⠁⠠⢀⠀⠄⢁⠠⢈⠠⠐⢀⠂⡐⢀⠂⡁⠄⡁⠂⠄⡈⠄⢂⠐⡀⠡⠀⠂⠐⠀⡀⠀\n\
+⠺⡄⢸⣿⣿⣿⣿⣿⣿⣿⣿⠟⣋⣴⡾⢛⣡⡾⢋⣴⣿⠟⠁⠀⠀⠀⠀⠀⠂⠀⠂⠁⠠⠀⢁⠠⠀⠌⢀⠐⠠⠐⡈⠄⢂⠐⡀⢂⠐⠠⢀⠁⢂⠐⡈⠄⡐⠠⢀⠡⠀⠁⡀⠀⠀\n\
+⠑⠄⠈⣿⣿⣿⣿⣿⣿⣯⣴⣾⣿⣯⣶⡿⢋⣴⡿⡿⠃⠀⠀⠀⠀⠀⠀⠀⠂⠁⠀⠌⢀⠈⠠⠀⠌⠀⢂⠈⡐⠠⠐⡈⠄⢂⠐⠠⢈⠐⠠⠈⠄⢂⠐⠠⢀⠡⠀⠠⠈⠀⠀⠀⠀\n\
+⡑⣚⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢛⣡⣾⣿⣿⠟⠀⠀⠀⠀⡀⠐⡈⠄⠡⠐⠈⠀⠄⠂⠠⠁⡈⠄⡈⠄⡐⠀⠡⠐⡀⠌⠠⢈⠐⠠⠈⠄⠡⢈⠀⢂⠁⠄⡐⠀⠁⠠⠀⠀⠀⠀\n\
+⡘⠔⠂⣿⣿⣿⣿⣿⣿⣿⣭⣡⣶⣿⣿⣿⡿⠋⠀⠀⠀⣠⠂⡅⢃⡐⡈⠐⠠⠁⡈⢀⠂⢁⠐⡀⠄⠐⠠⢀⠁⢂⠡⠀⠌⡐⠠⠈⠄⠡⢈⠐⠠⢈⠀⠌⠀⠄⢈⠠⠀⠀⠀⠀⠀\n\
+⠠⠈⠀⣿⣿⣿⣿⣿⣿⣿⣿⡘⣿⣿⣿⠏⠀⠀⠀⢠⠜⡤⠓⠌⠂⠐⠀⠀⠀⠀⠀⠂⡈⠄⠂⠄⢂⠁⠂⠄⡈⠄⠂⡁⠂⠄⡁⠂⠌⡐⠠⠈⠄⠂⡈⠄⠡⢈⠀⠀⠀⠀⠀⠀⠀\n\
+⢂⠡⠀⣿⣿⣿⣿⣿⣿⣿⣿⡇⠻⠿⠏⠀⠀⡠⢘⠢⣉⠂⠁⢀⠒⡄⠀⠀⠀⠀⢀⢠⡑⣊⠱⡈⠤⢈⠐⠠⠐⡈⠐⠠⢁⠂⠄⡁⠂⠄⡁⠂⠌⠐⠠⢈⠐⠠⠈⠀⠀⠀⠀⠀⠀\n\
+⢢⡑⠠⠉⠛⠿⣿⣿⣿⣿⡿⠟⡀⠠⡔⣎⠧⡑⡈⠐⠀⢀⠀⠀⠃⠐⠊⢁⠠⡰⢌⡒⡜⠤⠓⡌⢒⠠⠌⡠⠁⠄⡁⠂⠄⡈⠐⠠⢁⠂⠄⡁⠂⡁⠂⠄⡈⠄⠐⠀⠀⠀⠀⠀⠀\n\
+⠣⠌⢁⣤⣄⡀⠀⠀⠁⠀⠀⠀⠀⠀⠙⣬⠳⡱⡀⠀⠐⠀⠄⠀⠐⠠⠘⣀⠣⠔⢣⠜⣌⢣⡙⡔⢣⠘⠤⢡⠘⠠⢀⠅⠂⢄⡁⠂⠄⡈⠐⡀⠡⢀⠁⠂⠄⡐⠀⠀⠀⠀⠀⠀⠀\n\
+⠀⣠⣾⠇⣻⡁⢀⠐⠀⣤⣤⣀⠀⠀⠀⠀⡳⢡⠅⣂⠀⢈⠠⠀⢈⠀⡁⠄⠂⠍⢰⢊⠴⢣⠜⡰⢃⡍⢎⠤⢃⠅⢢⢈⠂⢄⠠⢁⠂⠄⠡⢀⠁⠂⠌⠐⡀⠠⠀⠀⠀⠀⠀⠀⠀\n\
+⣠⣿⣷⣿⣿⣰⠸⣿⣅⡀⠋⠁⠄⣀⠐⢀⣴⣶⣦⣤⣤⣤⣄⠀⠀⠀⢀⠀⠀⠀⠀⠉⠚⠵⣊⠵⣃⠞⣌⢎⡱⢊⡔⢢⠉⡄⠂⠄⠌⠠⢁⠂⠌⡐⠈⡀⠀⠄⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣄⢻⣿⣿⣿⣶⣶⣦⣶⠟⣿⣿⣿⣿⣿⣿⠃⠀⠀⠈⠀⠄⠡⠀⠀⠀⡐⠤⡀⠤⢈⠌⡠⠌⠠⠃⠌⡄⢣⠐⡡⠈⠄⠃⠄⡈⠐⠠⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣿⣆⢻⣿⣿⣿⣿⣿⡗⣾⣿⣿⣿⣿⠿⠃⠀⢀⠀⠠⠁⠂⠀⠀⡄⣒⠡⢂⠱⡈⠆⠘⠀⠡⠃⡜⠐⡨⠐⡂⠅⡘⠠⢁⠂⠄⡁⠂⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣿⢠⣧⠙⣯⢻⣿⣿⠀⢻⣿⣿⣯⣵⠂⢠⡍⣦⠑⠀⠀⠀⣦⢱⢰⡌⢢⡅⢢⠁⡄⠀⠀⠀⠂⡌⠂⢡⠑⠈⡆⢡⡌⠐⠈⠐⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣿⣼⣞⡠⠙⢿⣿⡿⠀⡈⠿⣿⠻⣥⡘⢦⡱⢂⢇⢡⡰⣍⢦⠓⡦⡑⠦⡘⠄⠂⠀⠀⠠⢁⠂⡐⢈⠰⢀⢃⠐⡂⠄⠃⠌⠀⠐⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣿⣿⣳⠆⢀⠀⠈⠑⠲⢐⠲⠀⣤⣤⣉⣄⣉⠁⡎⢧⠳⣜⢮⡙⡖⣩⠂⠀⠀⠀⠀⠐⡀⢂⠐⡠⢁⠢⠈⡄⢊⠐⡈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⡄⠀⠀⠀⠀⠀⠀⠺⡛⢿⣿⣿⣿⣆⠐⣶⣶⣤⣅⡙⢈⠑⠈⠀⠀⢀⠠⢁⠰⠠⣁⠒⡨⢄⠃⡔⠨⢀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣿⡻⣞⢠⡅⠀⠀⠀⠀⠀⠀⠀⠈⠢⢍⠻⢿⣿⣦⣬⣿⠿⠛⠁⣀⣤⡴⠀⠀⢆⡘⢄⠣⡑⢄⠣⠔⡌⠒⡌⢂⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⡟⣿⣝⡿⢸⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣷⣶⣂⠤⠤⣤⣴⣶⣿⡿⠋⠄⢠⡉⢖⠨⢆⡱⡘⡌⢆⢣⡘⢡⠘⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣽⣿⣮⣝⡣⢎⡐⠈⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⡿⣿⣿⠿⠛⠁⠀⡠⢎⡲⣩⢎⡕⢮⡔⢳⠸⡘⢦⠑⠢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⣿⣿⣿⣿⣿⣿⣿⣷⢎⠷⡨⢐⠀⠐⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠁⠀⠤⣐⡪⢟⣵⣫⣗⣳⠾⣜⡳⢎⣧⠫⣕⠊⠑⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
+⢹⣿⣿⣿⣿⣿⣿⣻⣎⡳⢄⡁⢂⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠢⠤⠽⢯⡟⠿⠹⠙⣩⡴⠦⣄⠀⠀⠀⠀⢀⠠⠀⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n"
+
+
+
+#define OK_CHECKOUT "            88\n\
+            88\n\
+            88\n\
+ ,adPPYba,  88   ,d8\n\
+a8\"     \"8a 88 ,a8\"\n\
+8b       d8 8888[\n\
+\"8a,   ,a8\" 88`\"Yba,\n\
+ `\"YbbdP\"'  88   `Y8a\n"
+
+//global variable admited to handle signals
+extern int loop_var;
+
 typedef struct s_icmp_packet
 {
 //--------- Special types ---------
 	struct sockaddr			saddr;
 	struct sockaddr_in		source, dest; // they are meant to be used to get the ip
 	struct iphdr			*ip; //this is used to get the ip header
+	struct addrinfo			hints, *result, *rp; //needed to get the dns
 //---------------------------------
 
 	int						sock_r;
 	unsigned char			*buffer; // for ethernet header
 	ssize_t					buflen;
-
-
+	char					*dns_name;
+	char					*dns_ip;
 } t_icmp_packet;
 
 //! do not use for project, it is just for testing
@@ -88,15 +144,16 @@ typedef struct s_raw_socket_sniffer_packet
 } t_raw_socket_sniffer_packet;
 
 //--------- ICMP RELATED ---------
-int		icmp_socket_setup(t_icmp_packet *packet); //!add dns attr
+int		icmp_socket_setup(t_icmp_packet *packet, char* dns_name); //!add dns attr
 void	print_eth(t_raw_socket_sniffer_packet *packet);
 void	get_ip_header(t_icmp_packet *packet);
+int		resolve_address_to_ip(t_icmp_packet *packet);
 
 //------------- UTILS -------------------
 void	sighandler(int signum);
 void	free_anything(t_icmp_packet *packet);
-
-void	setup_packet_to_zero(t_icmp_packet	*packet);
+void	setup_packet_to_zero(t_icmp_packet *packet);
+void	print_dns(t_icmp_packet packet);
 
 //------------- raw socket related --------------
 int		raw_socket_setup(t_raw_socket_sniffer_packet *packet);
