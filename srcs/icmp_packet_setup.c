@@ -1,9 +1,12 @@
 #include "./includes/utils.h"
+#include <netdb.h>
+#include <netinet/in.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 
 // for now it's just inlcudes
-//STEP 1
+//STEP 1 inizializzare le variabili "semplici"
 void	setup_packet_to_zero(t_icmp_packet	*packet)
 {
 	printf("Initiliazing struct\n");
@@ -12,11 +15,13 @@ void	setup_packet_to_zero(t_icmp_packet	*packet)
 	packet->sock_r = 0;
 	packet->buflen = 0;
 	packet->dns_name = 0;
+	packet->ip = 0;
 }
 
 /*
 HERE WE JUST DO A SETUP FOR ANY TYPE OF DATA ELABORATION
 Like the one to resolve the dns refer to other files
+qui tutto ok
 */
 int	icmp_socket_setup(t_icmp_packet *packet, char *dns_name)
 {
@@ -28,15 +33,18 @@ int	icmp_socket_setup(t_icmp_packet *packet, char *dns_name)
 	}
 
 	packet->dns_name = strdup(dns_name);
-	printf("retrieved packet %s\n", packet->dns_name);
 
 	// ? setup of hints for domain name resolution
-	memset(&packet->hints, 0, sizeof(packet->hints));
-	memset(&packet->result, 0, sizeof(*packet->result));
+	bzero(&packet->hints, sizeof(packet->hints));
+
+	packet->result = NULL;
 
 	packet->hints.ai_family = AF_INET;
 	packet->hints.ai_socktype = SOCK_RAW;
+	packet->hints.ai_protocol = IPPROTO_ICMP;
 
+	//per reverse dns look up penso, non lo so fra ahahahah
+	packet->ip = calloc(NI_MAXHOST, sizeof(char));
 	return (0);
 }
 

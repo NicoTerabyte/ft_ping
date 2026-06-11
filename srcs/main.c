@@ -19,11 +19,11 @@ int	loop_var = 0;
 int main(int argc, char **argv)
 {
 	t_icmp_packet				packet;
+	int 						res_of_dns;
 	//TODO:
 	// t_raw_socket_sniffer_packet	sniffer;
 
 	signal(SIGINT, sighandler);
-	(void)argv;
 	if (argc <= 1)
 	{
 		printf("Not enough arguments\n");
@@ -34,24 +34,25 @@ int main(int argc, char **argv)
 	if (icmp_socket_setup(&packet, argv[1]))
 	{
 		printf("%s", SHREK);
-		free_anything(&packet);
+		free_anything(&packet, 1);
 		exit(1);
 	}
 	//receive_raw_data(&packet); ONLY FOR SNIFFING AT LEVEL 2
 	printf("tests passed all initialized\n");
 
-	// this was useful for the raw socket
-	// printf("checking ethernet header\n");
-	// print_eth(&packet);
-	int res_of_dns = resolve_address_to_ip(&packet);
+	if (check_which_lookup(&packet) == 0)
+		res_of_dns= dns_lookup(&packet);
+	else
+		res_of_dns = reverse_dns_lookup(&packet);
+
 	printf("resolution of dns went: %d\n", res_of_dns);
 	if (res_of_dns == 0)
 	{
-		print_dns(packet);
+		printf("%s", OK_CHECKOUT);
 	}
 	else
 	{
-		free_anything(&packet);
+		free_anything(&packet, 0);
 		printf("GOOFY AHH ERROR WHILE RESOLVING THE ADDRESS\n");
 		printf(PACKET_ERROR);
 		exit(1);
@@ -63,6 +64,6 @@ int main(int argc, char **argv)
 		printf("sending packet....\n");
 		sleep(1);
 	}
-	free_anything(&packet);
+	free_anything(&packet, 0);
 	return (0);
 }

@@ -52,8 +52,12 @@ void sighandler(int signum)
 	loop_var = 1;
 }
 
-void	free_anything(t_icmp_packet *packet)
+//for now when dns_status is one i don't free the packet->result
+//this is a temporary fix since it would give me a segfault if i free it when the dns
+//is not resolved
+void	free_anything(t_icmp_packet *packet, int dns_status)
 {
+	printf("freeing stuff\n");
 	if (packet && packet->buffer)
 	{
 		free(packet->buffer);
@@ -61,9 +65,17 @@ void	free_anything(t_icmp_packet *packet)
 	}
 	if (packet && packet->dns_name)
 		free(packet->dns_name);
-	// !this generates an error if the address is fake
-	if (packet && packet->result)
+	
+	if ((packet && packet->result) && dns_status != 1)
+	{
+		printf("freeaddrinfo acting");
 		freeaddrinfo(packet->result);
+	}
+	if (packet && packet->ip)
+		free(packet->ip);
+
+	if (packet->sock_r >= 0)
+		packet->sock_r = -1;
 
 	printf("%s", OK_CHECKOUT);
 	// if (packet)
@@ -97,5 +109,5 @@ void	get_ip_header(t_icmp_packet *packet)
 	packet->ip = (struct iphdr*)packet->buffer;
 	memset(&packet->source, 0, sizeof(packet->source));
 	memset(&packet->dest, 0, sizeof(packet->dest));
-	packet->dest.sin_addr.s_addr = packet->ip->daddr;
+	packet->dest->sin_addr.s_addr = packet->ip->daddr;
 }

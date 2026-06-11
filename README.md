@@ -26,6 +26,22 @@ quindi quando avrai creato il pacchetto col protocollo corretto dovrai popolarlo
 ## riguardo a ping
 
 Ora mi concetrerò a tradurre l'indirizzo di dominio: questo lo deve fare il dns.
+serve anche il reverse dns lookup per la stringa pazza
+
+
+## Occhio bro 👀 💀
+
+memset ha fatto una cosa orribile al codice, cerchiamo di riesumare l'accaduto. se provo a memsettare u valore della classe sockaddr_t usando il puntatore sbagliato, anzi ho capito, ho fatto un errore disattento:
+
+ho fatto:
+
+```c
+memset(&packet->result, 0, siezof(*packet->result));
+//mi sono condannato ho over-sovrascritto la memoria, perché ho usato il *
+//invece doveva essere
+memset(&packet->result, 0, siezof(packet->result));
+
+```
 
 ## Parentesi sui Makefile praticamente un cheatsheet per crearne uno spiegato da Lollo per Lollo
 
@@ -150,3 +166,28 @@ Eval sheet -> time to live basso
 
 * prima simulazione del comando ping concentrarci sull'invio del messaggio quindi echo 8 e risposta echo 0
 * gestione di raw sockets per sniffing di pacchetti
+
+## struttura
+
+famo mente locale dai andiamo di logica e vinceremo voglio capire cerco.... **LA VERITÀ**.
+
+il mio main:
+
+```c
+typedef struct s_raw_socket_sniffer_packet
+{
+	//--------- Special types ---------
+	struct sockaddr			saddr;
+	struct sockaddr_in		source, dest; // they are meant to be used to get the ip
+	struct ethhdr			*eth; //this IS the ethernet header NOT USEFUL FOR THIS PROJECT
+	struct iphdr			*ip; //this is used to get the ip header
+	//---------------------------------
+
+	int						sock_r;
+	unsigned char			*buffer; // for ethernet header
+	ssize_t					buflen;
+	char					*dns;
+} t_raw_socket_sniffer_packet;
+```
+
+questa struttura infame, abbiamo anche addrinfo che serve per il provider? Ma fino a che punto?

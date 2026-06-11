@@ -15,9 +15,11 @@
 #include <net/ethernet.h>
 #include <netinet/ip.h>
 // ----------------------------
+
 // -------- mandatory? --------
 #include <linux/if_ether.h>
 // ----------------------------
+
 // -------- signals --------
 #include <signal.h>
 // ----------------------------
@@ -111,19 +113,24 @@ a8\"     \"8a 88 ,a8\"\n\
 //global variable admited to handle signals
 extern int loop_var;
 
+
+//! mi serve il reverse dns lookup
+
 typedef struct s_icmp_packet
 {
 //--------- Special types ---------
 	struct sockaddr			saddr;
-	struct sockaddr_in		source, dest; // they are meant to be used to get the ip
+	struct sockaddr_in		*source, *dest; // they are meant to be used to get the ip
 	struct iphdr			*ip; //this is used to get the ip header
-	struct addrinfo			hints, *result, *rp; //needed to get the dns
+	struct addrinfo			hints, *result, *rp; //needed to get the dns are they though?
 //---------------------------------
 
 	int						sock_r;
 	unsigned char			*buffer; // for ethernet header
 	ssize_t					buflen;
 	char					*dns_name;
+	//something to do FQDN
+	//maybe useless
 	char					*dns_ip;
 } t_icmp_packet;
 
@@ -132,12 +139,14 @@ typedef struct s_raw_socket_sniffer_packet
 {
 	//--------- Special types ---------
 	struct sockaddr			saddr;
+
+	//are they actually usdeful?
 	struct sockaddr_in		source, dest; // they are meant to be used to get the ip
 	struct ethhdr			*eth; //this IS the ethernet header NOT USEFUL FOR THIS PROJECT
 	struct iphdr			*ip; //this is used to get the ip header
 	//---------------------------------
 
-	int						sock_r;
+	int						sock_r; // sto maledetto è il l'fd del pacchetto socket, senza di esso non apriamo niente
 	unsigned char			*buffer; // for ethernet header
 	ssize_t					buflen;
 	char					*dns;
@@ -147,12 +156,15 @@ typedef struct s_raw_socket_sniffer_packet
 int		icmp_socket_setup(t_icmp_packet *packet, char* dns_name); //!add dns attr
 void	print_eth(t_raw_socket_sniffer_packet *packet);
 void	get_ip_header(t_icmp_packet *packet);
-int		resolve_address_to_ip(t_icmp_packet *packet);
-
+int		dns_lookup(t_icmp_packet *packet);
+int		reverse_dns_lookup(t_icmp_packet *packet);
 //------------- UTILS -------------------
 void	sighandler(int signum);
-void	free_anything(t_icmp_packet *packet);
+void	free_anything(t_icmp_packet *packet, int dns_status);
 void	setup_packet_to_zero(t_icmp_packet *packet);
+int		check_which_lookup(t_icmp_packet *packet);
+
+//todo maybe
 void	print_dns(t_icmp_packet packet);
 
 //------------- raw socket related --------------

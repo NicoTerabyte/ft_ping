@@ -1,0 +1,23 @@
+Initiliazing struct
+tests passed all initialized
+retrieved packet www.google.com
+trying to retrieve ip from www.google.comwww.google.com
+resolution of dns went: 0
+            88
+            88
+            88
+ ,adPPYba,  88   ,d8
+a8"     "8a 88 ,a8"
+8b       d8 8888[
+"8a,   ,a8" 88`"Yba,
+ `"YbbdP"'  88   `Y8a
+sending packet....
+sending packet....
+Got signal 2 ping statistics coming soon....            88
+            88
+            88
+ ,adPPYba,  88   ,d8
+a8"     "8a 88 ,a8"
+8b       d8 8888[
+"8a,   ,a8" 88`"Yba,
+ `"YbbdP"'  88   `Y8a
