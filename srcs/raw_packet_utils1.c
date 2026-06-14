@@ -55,6 +55,7 @@ void sighandler(int signum)
 //for now when dns_status is one i don't free the packet->result
 //this is a temporary fix since it would give me a segfault if i free it when the dns
 //is not resolved
+//non serve liberare packet->ip_name perché è nello stack
 void	free_anything(t_icmp_packet *packet, int dns_status)
 {
 	printf("freeing stuff\n");
@@ -65,7 +66,7 @@ void	free_anything(t_icmp_packet *packet, int dns_status)
 	}
 	if (packet && packet->dns_name)
 		free(packet->dns_name);
-	
+
 	if ((packet && packet->result) && dns_status != 1)
 	{
 		printf("freeaddrinfo acting");

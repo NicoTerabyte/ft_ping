@@ -191,3 +191,36 @@ typedef struct s_raw_socket_sniffer_packet
 ```
 
 questa struttura infame, abbiamo anche addrinfo che serve per il provider? Ma fino a che punto?
+
+### la risoluzione del dns e il reverse dns
+
+so che tutto gira intorno a getaddrinfo una funzione molto potente in grado di risolvere l'indirizzo ip del mittente avendo solo il nome di quest'ultimo.
+il prototipo ha questo aspetto
+
+```c
+int getaddrinfo(const char *nodename,
+                const char *servname,
+                const struct addrinfo *hints,
+                struct addrinfo **res);
+```
+
+da quel che sono riuscito a capire, questa funzione è fondamentale per il dns, come sono fondamentali i due attributi della struct addrinfo, cioè hints e res. Andiamo in ordine però, hints pare avere tutti i dati necessari per getaddrinfo per capire con quali pacchetti lavoriamo, questo per riuscire in ordire a reperire l'ip giusto in base alle circostanze, nel nostro caso io ho inizializzato hints per gestire pacchetti ICMP
+
+```c
+hints.ai_family = AF_INET;
+hints.ai_socktype = SOCK_RAW;
+hints.ai_protocol = IPPROTO_ICMP;
+```
+
+un dubbio che rimane è dove e come stampare il risultato dell'operazione di
+questo converte solamente un testo però.... ora devo trovare il modo di convertire dato un ip
+visto che a noi serve in FQDN, che sarebbe una stringa più articolata in grado.
+
+Si parla anche di questo attributi AI_FAMILY, questo attributo simboleggia si la famiglia del socket ma anche **che socket** nello specifico **filtrare** da accettare, con AF_INET accettiamo solo ip ipv4 quindi la funzione non proverà a reperire ip della famiglia ipv6, interessante.
+
+abbiamo dei pezzi che non tornano ancora:
+inet_ptoa() funzionerebbe da checker per un ip valido, insomma era da utilizzare per capire se la stringa passata da terminale era già un ip da contattare. PERÒ getaddrinfo fa tutto il lavoro e non serve nemmeno fare questo controllo visto che getaddrinfo sa già se fare o no il dns_lookup, potentissima.
+prossima volta facciamo il reverse dns_lookup allora
+
+per chiudere il dubbio di prima, utilizziamo la funzione inet_ntop -> network to presentation, questo permette ad un indirizzo apparentemente in binario di diventare leggibile, stringa/ascii.
+ci sono

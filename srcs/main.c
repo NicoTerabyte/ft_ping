@@ -15,13 +15,31 @@
 
 int	loop_var = 0;
 
+/*
+Note relative al codice:
+
+TODO:
+t_raw_socket_sniffer_packet	sniffer;
+receive_raw_data(&packet); ONLY FOR SNIFFING AT LEVEL 2
+
+line 59
+	se non torna 1 vuol dire che è un indirizzo di dominio "www.google.com" quindi in ordine
+	per fare in seguito il reverse dns devo PER FORZA reperire l'ip
+	if (is_dns_needed(&packet) == 0)
+	da solo controlla anche l'ip stesso zio pera
+
+line 59:
+	questo va fatto per il nome per intero
+	il www.google.it non ci interessa, è solo usato per trovare l'ip
+	se invece abbiamo già l'ip getaddrinfo non farà il dns_lookup da solo
+	ma la funziona fa comodo per il setup del destinatario packet->dest
+*/
 
 int main(int argc, char **argv)
 {
 	t_icmp_packet				packet;
 	int 						res_of_dns;
-	//TODO:
-	// t_raw_socket_sniffer_packet	sniffer;
+
 
 	signal(SIGINT, sighandler);
 	if (argc <= 1)
@@ -37,19 +55,16 @@ int main(int argc, char **argv)
 		free_anything(&packet, 1);
 		exit(1);
 	}
-	//receive_raw_data(&packet); ONLY FOR SNIFFING AT LEVEL 2
-	printf("tests passed all initialized\n");
 
-	if (check_which_lookup(&packet) == 0)
-		res_of_dns= dns_lookup(&packet);
-	else
-		res_of_dns = reverse_dns_lookup(&packet);
+	printf("tests passed all initialized\n");
+	res_of_dns= dns_lookup(&packet);
+
+	res_of_dns = reverse_dns_lookup(&packet, res_of_dns);
 
 	printf("resolution of dns went: %d\n", res_of_dns);
+
 	if (res_of_dns == 0)
-	{
 		printf("%s", OK_CHECKOUT);
-	}
 	else
 	{
 		free_anything(&packet, 0);
@@ -61,7 +76,7 @@ int main(int argc, char **argv)
 
 	while (loop_var == 0)
 	{
-		printf("sending packet....\n");
+		printf("sending packet.... to %s\n", packet.dns_ip);
 		sleep(1);
 	}
 	free_anything(&packet, 0);
