@@ -28,7 +28,6 @@ quindi quando avrai creato il pacchetto col protocollo corretto dovrai popolarlo
 Ora mi concetrerò a tradurre l'indirizzo di dominio: questo lo deve fare il dns.
 serve anche il reverse dns lookup per la stringa pazza
 
-
 ## Occhio bro 👀 💀
 
 memset ha fatto una cosa orribile al codice, cerchiamo di riesumare l'accaduto. se provo a memsettare u valore della classe sockaddr_t usando il puntatore sbagliato, anzi ho capito, ho fatto un errore disattento:
@@ -94,7 +93,8 @@ re: fclean all
 
 .PHONY: all clean fclean re
 ```
-Pare un casino, se non sai le regole infatti sono qui per fare da mini remainder di alcune regole chiave che fanno funzionare questo makefile in maniera pulita e sensata.
+
+Pare un casino, se non sai le regole infatti sono qui per fare da mini reminder di alcune regole chiave che fanno funzionare questo makefile in maniera pulita e sensata.
 Allora nelle prime righe semplicemente c'è la dichiarazione delle variabili, bisogna fare particolarmente attenzione alle variabili che come contenuto possiedono dei valori elaborati tra parentesi. Queste io le chiamo _operazioni implicite_, in soldoni il risultato delle operazioni che stanno avvenendo tra parentesi andranno nella variabile.
 Le due operazioni sono completamente diverse, e vi spiego il perché quella che avviene nella variabile C_FILES è praticamente la ricerca tramite bash di file .c infatti una cosa sorprendente è il fatto che il linguaggio make possiede della parole chiave per fare azioni speciali, nel caso mio mi serviva il risultato di un comando in bash e allora ho utilizzato la parola chiave **shell** per dire al makefile che la stringa dopo la parola chiave era un comando.
 
@@ -223,4 +223,88 @@ inet_ptoa() funzionerebbe da checker per un ip valido, insomma era da utilizzare
 prossima volta facciamo il reverse dns_lookup allora
 
 per chiudere il dubbio di prima, utilizziamo la funzione inet_ntop -> network to presentation, questo permette ad un indirizzo apparentemente in binario di diventare leggibile, stringa/ascii.
-ci sono
+
+## Il checksum del pacchetto
+
+![](/img_for_readme/check_sum_a_real_one.gif)
+
+se ho capito bene, è l'ultimo tassello del pacchetto dopo che il pacchetto stesso è stato creato.
+Voglio far notare a me stesso, che fino ad adesso ci siamo limitati solamente a capire chi fosse il destinatario, ma mai a capire come mandare un pacchetto ad esso, questo viene risolto grazie all'apposita struct ichmpip o qualcosa del genere. Comunque il checksum è particolare perché sarebbe un'etichetta che ci fa capire se un pacchetto è valido o no. praticamente sta alla fine del pacchetto ed è la prima cosa che, viene letta dal destinatario.
+Oppure è anche la prima cosa che leggiamo noi quando il destinatario ci risponde.
+
+il nome non è casuale, infatti è il "controllo" della "somma".
+Il checksum è contraddistinto dalla somma dei vari bits, o dei valori adiacenti in un buffer e dal cambio del risultato finale in una versione complementare.
+Se abbiamo per esempio
+
+1010
+1100
+
+la somma sarà
+(1)0010
+
+c'è un 1 di carry quindi secondo l'algoritmo del checksum va sommato al risultato attuale quindi
+0010
+---1
+= 0011
+
+ora prendiamo il valore **complementare** invertiamo 1 in 0 e  viceversa
+
+1100
+questo è il nostro checksum. a quanto pare questo si chiama "one's complement"
+ok ho capito in binario, ma come diavolo lo rappresento in codice.
+
+Nel nostro caso, non serve fasciarci tanto la testa, dobbiamo capire sopratutto che l'algoritmo, si basa sul contenuto del pacchetto stesso. Infatti il pacchetto determina il checksum stesso,
+per essere più chiaro il checksum è la somma del pacchetto smolecolato in bytes e suddiviso in n gruppi di bit, questi bit vengono poi sommati tra loro creando il checksum.
+Per verificarlo si prende il checksum e lo si somma al pacchetto, se esce tutto 1 il pacchetto è integro.
+
+Esempio:
+immaginiamo di avere un messaggio "ciao mondo" che diventa
+01100011
+01101001
+01100001
+01101111
+00100000
+01101101
+01101111
+01101110
+01100100
+01101111
+00001010
+---------
+= qualcosa
+questo quantitativo basta sommarlo un poco alla volta per ottere il checksum.
+una piccola idea per me, un programma che data una stringa composta da 1 o 0 mi dia il corrispettivo
+esadecimale porco mondo.
+Anche l'aritmetica esadecimale serve perché C non sa calcolare col binario a quanto pare o comunque facilita i calcoli? boh non sono così sicuro.
+
+comunque l'algoritmo di invio da parte del pinger è così
+
+```c
+int	sender_checksum(void *package, int pckg_len)
+{
+	unsigned int sum=0; // 32 bit
+	unsigned short result; // 16 bit
+	unsigned short *buf = package; // 16 bit
+
+	for (sum = 0; pckg_len > 1; pckg_len -= 2)
+		sum += *buf++;
+
+	if (pckg_len == 1)
+		sum+= *(unsigned char*)buf;
+
+	// qualsiasi valore carry viene shiftato a sinistra
+	// e sommato al valore originale mascherato che toglie i vecchi carry
+	sum = (sum >> 16) + (sum & 0xFFFF);
+	sum += (sum >> 16);
+
+	result = ~sum;
+	return result;
+}
+```
+
+fai attenzione❗ alle operazioni bitwise, questo perché l'algoritmo del rfc lavora con coppie di bytes quindi 16 bits, è una cosa che devi approfondire bene però, l'algoritmo di per se compie delle azioni prende gli 8 bit e li mette dentro uno storer da 16 così lavoriamo con 2 bytes fa comodo sia al computer e il RFC è stato fatto per lavorare su singole CPU che ai tempi puntavanon all'eficienza, lavorare un byte alla volta renderebbe più confusionario e doveroso il calcolo non sfruttando la potenza della CPU al suo massimo.
+ci sono anche più casistiche coperte:
+8 bytes = massimo 256 possibilità di rilevare un checksum fallato
+16 bytes = 65.536 combinazioni.
+
+prossima volta guardo meglio questa cosa però

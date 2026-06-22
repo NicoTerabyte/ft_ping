@@ -1,10 +1,10 @@
 #include "includes/utils.h"
-#include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+
 
 /*
 è interessante che il getaddrinfo sa se fare il dns_lookup in base a cosa gli passi
@@ -15,9 +15,12 @@ line 29:
 	essendo che result è un sockaddr generico, noi stiamo lavorando con ipv4 quindi
 	sockaddr_in va fatto il cast guarda il file reverse_dns_lookup_test è stato spiegato
 
+grazie a getaddrinfo siamo in grado di reperire il destinatario
 semplicemente ntop -> network to presentation (leggibile) trasforma l'address da un ip non leggibile ad una stringa
+IMPORTANTE
+getnameinfo può fallire anche con un ip valido, questo perché non tutti i domini hanno un nome definito occhio alla casistica
 */
-int	dns_lookup(t_icmp_packet *packet)
+int	dns_lookup(t_dest_packet *packet)
 {
 	int	client_ip = 0;
 
@@ -31,7 +34,6 @@ int	dns_lookup(t_icmp_packet *packet)
 		printf("%s\n", SHREK);
 		return (EXIT_FAILURE);
 	}
-
 	packet->dest = (struct sockaddr_in *)packet->result->ai_addr;
 	//questa conversione ziopera quanto ci ho messo a capire cosa servisse.
 	inet_ntop(AF_INET, &(packet->dest->sin_addr), packet->dns_ip, INET_ADDRSTRLEN);
@@ -39,19 +41,24 @@ int	dns_lookup(t_icmp_packet *packet)
 	return (0);
 }
 
-int	reverse_dns_lookup(t_icmp_packet *packet, int other_dns_status)
+int	reverse_dns_lookup(t_dest_packet *packet, int other_dns_status)
 {
+	int status;
 	if (other_dns_status != 0)
 	{
 		printf("SUPER GOOFY DETECTED\n");
 		printf("%s", REVERSE_DNS_ERROR);
 		return (-1);
 	}
-	printf("todo prossima volta");
-	int status;
 
-	(void)packet;
-	(void)status;
+	status = getnameinfo((struct sockaddr *)packet->dest, sizeof(*packet->dest), packet->fqdn, sizeof(packet->fqdn), NULL, 0, NI_NAMEREQD);
+
+	if (status != 0)
+	{
+		printf("REAL REVERSE LOOKUP FAILED or full name not available\n");
+		inet_ntop(AF_INET, packet->dest, packet->fqdn, sizeof(packet->fqdn));
+	}
+	printf("reverse we got %s\n", packet->fqdn);
 	return 0;
 }
 
@@ -66,7 +73,7 @@ significa che il valore passato da terminale è già un ip 1.1.1.1
 
 ma alla fine questa funzione non mi serve getaddrinfo fa l'heavy lifting
 */
-int		is_dns_needed(t_icmp_packet *packet)
+int		is_dns_needed(t_dest_packet *packet)
 {
 	if (inet_pton(AF_INET, packet->dns_name, &(packet->dest)) == 1)
 	{

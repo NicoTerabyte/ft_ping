@@ -10,7 +10,6 @@
 //il FQDN è www.google.com
 
 // è tutto da costruire?
-// dns è da intepretare
 // checksum da calcolare?
 
 int	loop_var = 0;
@@ -33,13 +32,16 @@ line 59:
 	il www.google.it non ci interessa, è solo usato per trovare l'ip
 	se invece abbiamo già l'ip getaddrinfo non farà il dns_lookup da solo
 	ma la funziona fa comodo per il setup del destinatario packet->dest
+
+devo gestire meglio gli errori per il reperimento del dns e del reverse
+da fare sarebbe controllare le apposite librerie per questo
 */
 
 int main(int argc, char **argv)
 {
-	t_icmp_packet				packet;
+	t_dest_packet				packet;
 	int 						res_of_dns;
-
+	int							seq;
 
 	signal(SIGINT, sighandler);
 	if (argc <= 1)
@@ -49,7 +51,7 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 	setup_packet_to_zero(&packet);
-	if (icmp_socket_setup(&packet, argv[1]))
+	if (icmp_dest_socket_setup(&packet, argv[1]))
 	{
 		printf("%s", SHREK);
 		free_anything(&packet, 1);
@@ -57,7 +59,7 @@ int main(int argc, char **argv)
 	}
 
 	printf("tests passed all initialized\n");
-	res_of_dns= dns_lookup(&packet);
+	res_of_dns = dns_lookup(&packet);
 
 	res_of_dns = reverse_dns_lookup(&packet, res_of_dns);
 
@@ -73,11 +75,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-
+	seq = 1;
 	while (loop_var == 0)
 	{
-		printf("sending packet.... to %s\n", packet.dns_ip);
+		printf("64 bytes from %s: icmp_seq=%d\n", packet.dns_ip, seq);
 		sleep(1);
+		seq++;
 	}
 	free_anything(&packet, 0);
 	return (0);

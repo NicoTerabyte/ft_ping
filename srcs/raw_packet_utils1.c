@@ -56,7 +56,7 @@ void sighandler(int signum)
 //this is a temporary fix since it would give me a segfault if i free it when the dns
 //is not resolved
 //non serve liberare packet->ip_name perché è nello stack
-void	free_anything(t_icmp_packet *packet, int dns_status)
+void	free_anything(t_dest_packet *packet, int dns_status)
 {
 	printf("freeing stuff\n");
 	if (packet && packet->buffer)
@@ -100,7 +100,7 @@ void	print_eth(t_raw_socket_sniffer_packet *packet) //?not useful anymore
 
 
 
-void	get_ip_header(t_icmp_packet *packet)
+void	get_ip_header(t_dest_packet *packet)
 {
 	//* Starting from level 3 remember
 	// i need to do a little map to conceptualize
