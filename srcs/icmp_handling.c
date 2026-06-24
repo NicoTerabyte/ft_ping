@@ -1,9 +1,4 @@
 #include "includes/utils.h"
-#include <netdb.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
 
 
 /*
@@ -61,6 +56,34 @@ int	reverse_dns_lookup(t_dest_packet *packet, int other_dns_status)
 	printf("reverse we got %s\n", packet->fqdn);
 	return 0;
 }
+
+/*
+for more information check the code in the "testing_stuff" dir.
+the mode var it's used to check if whoever called the function is the sender (mode = 0) of the packet
+so it does need to create it or if the receiver (mode = 1), so it needs to add it to it's calculated checksum
+to check if the packet it's valid, before the shifting
+*/
+unsigned short	checksum_interpretation_creation(void *package, int pckg_len, int mode, unsigned int s_checksum)
+{
+	unsigned int sum=0; // 32 bit per gestire sequenze dispari
+	unsigned short result; // 16 bit
+	unsigned short *buf = package; // 16 bit
+
+	for (sum = 0; pckg_len > 1; pckg_len -= 2)
+		sum += *buf++;
+
+	if (pckg_len == 1)
+		sum+= *(unsigned char*)buf;
+
+	if (mode == 1)
+		sum+=s_checksum;
+	sum = (sum >> 16) + (sum & 0xFFFF);
+	sum += (sum >> 16);
+
+	result = ~sum;
+	return result;
+}
+
 
 /*
 La superpotenza di getaddrinfo (la funzione che fa la risoluzione DNS) è che è abbastanza intelligente da capire da sola cosa le stai passando.

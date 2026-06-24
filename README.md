@@ -270,7 +270,7 @@ immaginiamo di avere un messaggio "ciao mondo" che diventa
 01100100
 01101111
 00001010
----------
+
 = qualcosa
 questo quantitativo basta sommarlo un poco alla volta per ottere il checksum.
 una piccola idea per me, un programma che data una stringa composta da 1 o 0 mi dia il corrispettivo
@@ -280,7 +280,7 @@ Anche l'aritmetica esadecimale serve perché C non sa calcolare col binario a qu
 comunque l'algoritmo di invio da parte del pinger è così
 
 ```c
-int	sender_checksum(void *package, int pckg_len)
+unsigned short	sender_checksum(void *package, int pckg_len)
 {
 	unsigned int sum=0; // 32 bit
 	unsigned short result; // 16 bit
@@ -292,7 +292,7 @@ int	sender_checksum(void *package, int pckg_len)
 	if (pckg_len == 1)
 		sum+= *(unsigned char*)buf;
 
-	// qualsiasi valore carry viene shiftato a sinistra
+	// qualsiasi valore carry viene shiftato a destra
 	// e sommato al valore originale mascherato che toglie i vecchi carry
 	sum = (sum >> 16) + (sum & 0xFFFF);
 	sum += (sum >> 16);
@@ -302,9 +302,38 @@ int	sender_checksum(void *package, int pckg_len)
 }
 ```
 
-fai attenzione❗ alle operazioni bitwise, questo perché l'algoritmo del rfc lavora con coppie di bytes quindi 16 bits, è una cosa che devi approfondire bene però, l'algoritmo di per se compie delle azioni prende gli 8 bit e li mette dentro uno storer da 16 così lavoriamo con 2 bytes fa comodo sia al computer e il RFC è stato fatto per lavorare su singole CPU che ai tempi puntavanon all'eficienza, lavorare un byte alla volta renderebbe più confusionario e doveroso il calcolo non sfruttando la potenza della CPU al suo massimo.
+fai attenzione❗ alle operazioni bitwise, questo perché l'algoritmo del rfc lavora con coppie di bytes quindi 16 bits, l'algoritmo di per se compie delle azioni prende gli 8 bit e li mette dentro uno storer da 16 così lavoriamo con 2 bytes, questo fa comodo al computer e il RFC è stato fatto per lavorare su singole CPU che ai tempi puntavano all'efficienza. lavorare un byte alla volta renderebbe più confusionario e doveroso il calcolo non sfruttando la potenza della CPU al suo massimo, ai tempi era in grado di gestire 16 bytes quindi perché non usarla al suo massimo?
 ci sono anche più casistiche coperte:
 8 bytes = massimo 256 possibilità di rilevare un checksum fallato
 16 bytes = 65.536 combinazioni.
 
-prossima volta guardo meglio questa cosa però
+Invece se dobbiamo concentrarci solamente sul tradurre un checksum, se ne abbiamo accesso semplicemente,
+ci basta prendere il checksum calcolato passarlo ad una funzione che essenzialmente farà la stessa procedurà, calcolando **IL SUO CHECKSUM**. L'unica vera differenza sarà alla fine dove, prima di fare lo shifting e quant'altro si sommerà al checksum ricevuto in input, se invertendo con la ~ uscirà 0 come risultato intero, allora il pacchetto sarà integro.
+
+## Come costruire il pacchetto?
+
+il pacchetto icmp della struttura icmp ha dei pezzi fondamentali
+
+```c
+struct icmphdr icmp;
+icmp->type = ICMP_ECHO;           // Echo Request
+icmp->code = 0;                   // Always 0 for ping
+icmp->un.echo.id = getpid();      // Process ID
+icmp->un.echo.sequence = seq++;   // Sequence number parte da 1 (non c'è scritto ma pare così)
+icmp->checksum = calculate_checksum(icmp, packet_size);
+
+```
+
+la sequence non mi torna affatto, capisco il type mi serve per comunicare con il destinatario, il codice è per definire il tipo di pacchetto nel network (forse).
+l'id è per tenere traccia del processo che sta facendo la request
+la sequenza boh?
+il checksum lo sappiamo molto bene.
+
+Ok il RFC pare bello particolare. Vediamo il rapporto con il protocollo in confronto a (🆗 = capito)
+gateway ❌ non so su che rete lavori
+checksum 🆗
+datagram (com'è costruito il pacchetto) 🆗
+inviare e ricevere ❌
+
+pare che il RFC dica di dire quando una destinazione non sia raggiungibile anche se ping si appende
+

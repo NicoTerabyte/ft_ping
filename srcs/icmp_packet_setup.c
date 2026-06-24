@@ -1,12 +1,9 @@
 #include "./includes/utils.h"
-#include <netdb.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/socket.h>
+
 
 // for now it's just inlcudes
 //STEP 1 inizializzare le variabili "semplici"
+//buffer->packet seems to not be used
 void	setup_packet_to_zero(t_dest_packet	*packet)
 {
 	printf("Initiliazing struct\n");
@@ -26,7 +23,7 @@ qui tutto ok
 i valori relativi al destinatario sono:
 dns_name
 hints
-ip
+ip -> no purpose for now
 result
 dest
 dns_ip
@@ -52,13 +49,20 @@ int	icmp_dest_socket_setup(t_dest_packet *packet, char *dns_name)
 	packet->hints.ai_socktype = SOCK_RAW;
 	packet->hints.ai_protocol = IPPROTO_ICMP;
 
-	//per reverse dns look up penso, non lo so fra ahahahah
+	// non l'ho ancora usato
 	packet->ip = calloc(NI_MAXHOST, sizeof(char));
 	return (0);
 }
 
+
+
 void	icmp_packet_to_send_setup(t_icmp_packet_to_send *packet_to_send)
 {
+	packet_to_send->icmp_packet.type = ECHO_REQUEST;
+	packet_to_send->icmp_packet.code = 0;
+	packet_to_send->icmp_packet.un.echo.id = getpid();
+	packet_to_send->icmp_packet.un.echo.sequence = 1;
+	packet_to_send->icmp_packet.checksum = checksum_interpretation_creation(&packet_to_send->icmp_packet, sizeof(packet_to_send->icmp_packet), 0, 0);
 	return;
 }
 

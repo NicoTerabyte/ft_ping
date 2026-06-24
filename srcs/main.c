@@ -83,5 +83,6 @@ int main(int argc, char **argv)
 		seq++;
 	}
 	free_anything(&packet, 0);
+	printf("finito\n %s", ending);
 	return (0);
 }

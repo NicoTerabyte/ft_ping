@@ -59,11 +59,11 @@ void sighandler(int signum)
 void	free_anything(t_dest_packet *packet, int dns_status)
 {
 	printf("freeing stuff\n");
-	if (packet && packet->buffer)
-	{
-		free(packet->buffer);
-		printf("To implement....");
-	}
+	// if (packet && packet->buffer)
+	// {
+	// 	free(packet->buffer);
+	// 	printf("To implement....");
+	// }
 	if (packet && packet->dns_name)
 		free(packet->dns_name);
 
@@ -100,15 +100,3 @@ void	print_eth(t_raw_socket_sniffer_packet *packet) //?not useful anymore
 
 
 
-void	get_ip_header(t_dest_packet *packet)
-{
-	//* Starting from level 3 remember
-	// i need to do a little map to conceptualize
-	// how this part is gonna be into the initialization of the struct
-	unsigned short iphdrlen;
-	(void) iphdrlen;
-	packet->ip = (struct iphdr*)packet->buffer;
-	memset(&packet->source, 0, sizeof(packet->source));
-	memset(&packet->dest, 0, sizeof(packet->dest));
-	packet->dest->sin_addr.s_addr = packet->ip->daddr;
-}
