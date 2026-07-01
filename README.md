@@ -35,10 +35,10 @@ memset ha fatto una cosa orribile al codice, cerchiamo di riesumare l'accaduto. 
 ho fatto:
 
 ```c
-memset(&packet->result, 0, siezof(*packet->result));
+memset(&packet->result, 0, sizeof(*packet->result));
 //mi sono condannato ho over-sovrascritto la memoria, perché ho usato il *
 //invece doveva essere
-memset(&packet->result, 0, siezof(packet->result));
+memset(&packet->result, 0, sizeof(packet->result));
 
 ```
 
@@ -143,6 +143,10 @@ echo $< touch hey one: touch one two: touch two clean: rm -f hey one two
 
 [guida alla creazione di un makefile](https://makefiletutorial.com)
 
+[Algoritmo del checksum](https://datatracker.ietf.org/doc/html/rfc1071#autoid-3)
+[rfc di ping](https://datatracker.ietf.org/doc/html/rfc792#ref-1)
+[challenge e introduzione ad un approccio per ping](https://medium.com/@gapple.web3/from-zero-to-ping-how-i-rebuilt-the-classic-network-tool-in-c-5f9ce447a291)
+
 ### Libraries
 
 wenet.h
@@ -226,10 +230,10 @@ per chiudere il dubbio di prima, utilizziamo la funzione inet_ntop -> network to
 
 ## Il checksum del pacchetto
 
-![](/img_for_readme/check_sum_a_real_one.gif)
+![jar_guy](/img_for_readme/check_sum_a_real_one.gif)
 
 se ho capito bene, è l'ultimo tassello del pacchetto dopo che il pacchetto stesso è stato creato.
-Voglio far notare a me stesso, che fino ad adesso ci siamo limitati solamente a capire chi fosse il destinatario, ma mai a capire come mandare un pacchetto ad esso, questo viene risolto grazie all'apposita struct ichmpip o qualcosa del genere. Comunque il checksum è particolare perché sarebbe un'etichetta che ci fa capire se un pacchetto è valido o no. praticamente sta alla fine del pacchetto ed è la prima cosa che, viene letta dal destinatario.
+Voglio far notare a me stesso, che fino ad adesso ci siamo limitati solamente a capire chi fosse il destinatario, ma mai a capire come mandare un pacchetto ad esso, questo viene risolto grazie all'apposita struct icmphip o qualcosa del genere. Comunque il checksum è particolare perché sarebbe un'etichetta che ci fa capire se un pacchetto è valido o no. praticamente sta alla fine del pacchetto ed è la prima cosa che, viene letta dal destinatario.
 Oppure è anche la prima cosa che leggiamo noi quando il destinatario ci risponde.
 
 il nome non è casuale, infatti è il "controllo" della "somma".
@@ -337,3 +341,72 @@ inviare e ricevere ❌
 
 pare che il RFC dica di dire quando una destinazione non sia raggiungibile anche se ping si appende
 
+## Socket programming l'abc delle funzioni (cheatsheet)
+
+socket
+read
+sendto
+listen
+bind
+poll/epoll -> peaking for recv/recvfrom? socket non-bloccante forse
+recv
+recvfrom (gemella di sendto bloccante)
+inet_ntop -> da rivedere
+
+## ricevere il dato (poll)
+
+recvfrom è il metodo per capire se il pacchetto inviato sta lavorando a dovere, riceve in quantità, il numero di bytes con cui il nostro destinatario risponde,
+però è una funzione **bloccante** questo significa che quando viene invocata, causa al programma di bloccarsi improvvisamente
+fino a quando qualcosa non arriva.
+
+il problema di questo fattore bloccante, è che praticamente se fallisse qualche interazione o ci fosse un timeout, non potremmo mai saperlo.
+Questo perché a livello di funzionalità recvfrom al compito di ricevere, non a un timer interno
+che gli permette di decidere **quanto tempo deve aspettare**.
+
+
+
+## l'iceberg della conversione dei socket e inet_ntop che mi tradisce
+
+allora, siamo arrivati indubbiamente a buon punto, il messaggio va, c'è un feedback, quindi no timeout, e ora ci basta capire se chi ha risposto è lo stesso con cui volevamo comunicare.
+Una semplice stampa no? ahahahah col cavolo, grazie a recvfrom siamo in grado di mettere in un contenitore colui che risponde al nostro ping, il problema? usa un sockaddr e non un sockaddr_in, perché dev'essere generico e gestire più protocolli. una cosa interessante che però ho imparato è che sockaddr è come l'argilla, può essere plasmato per incastrarsi nel protocollo che più ti interessa
+
+infatti una cosa del genere non è per niente impossibile castando al tipo che ci interessa
+
+```c
+ipv4_caster = (struct sockaddr_in *)sender;
+```
+
+ed è **l'unico modo** che ho trovato per ora per capire con chi stessi comunicando.
+Ho fatto una piccola funzione apposita per gestire la risposta, o almeno per capire se il destinatario mi HA RISPOSTO
+
+```c
+void	print_msg_rec_data(struct sockaddr *sender, size_t package_size, int seq, t_dest_data destinatary)
+{
+	char	sender_ip[1024];
+	struct sockaddr_in	*ipv4_caster;
+
+	ipv4_caster = (struct sockaddr_in *)sender;
+
+	strip_sender_ip(sender);
+	if (sender)
+	{
+		memset(sender_ip, 0, sizeof(sender_ip));
+		inet_ntop(AF_INET, &(ipv4_caster->sin_addr), sender_ip, INET_ADDRSTRLEN);
+		if (strcmp(sender_ip, destinatary.dns_ip) == 0)
+			printf("%zu bytes from %s: icmp_seq=%d\n", package_size, sender_ip, seq);
+		else
+			printf("someone %s is answering instead of the destinatary %s\n", sender_ip, destinatary.dns_ip);
+	}
+	else
+		printf("The  address of the sender is not defined uknown answerer\n");
+
+}
+```
+il metodo lacca ancora di qualcosa, i bytes di risposta sono incorretti.
+
+ho appena scoperto che a sendto frega il cavolo se un pacchetto segue un protocollo? Damn non sapevo
+cioè puoi mandare una struct con i suoi dati dentro e lui da solo la invia, ecco come si manda il payload
+
+## gestire gli errori come un pro in C
+
+ziobon

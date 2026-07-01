@@ -15,7 +15,7 @@ semplicemente ntop -> network to presentation (leggibile) trasforma l'address da
 IMPORTANTE
 getnameinfo può fallire anche con un ip valido, questo perché non tutti i domini hanno un nome definito occhio alla casistica
 */
-int	dns_lookup(t_dest_packet *packet)
+int	dns_lookup(t_dest_data *packet)
 {
 	int	client_ip = 0;
 
@@ -30,13 +30,12 @@ int	dns_lookup(t_dest_packet *packet)
 		return (EXIT_FAILURE);
 	}
 	packet->dest = (struct sockaddr_in *)packet->result->ai_addr;
-	//questa conversione ziopera quanto ci ho messo a capire cosa servisse.
 	inet_ntop(AF_INET, &(packet->dest->sin_addr), packet->dns_ip, INET_ADDRSTRLEN);
 	printf("ip di riferimento %s\n", packet->dns_ip);
 	return (0);
 }
 
-int	reverse_dns_lookup(t_dest_packet *packet, int other_dns_status)
+int	reverse_dns_lookup(t_dest_data *packet, int other_dns_status)
 {
 	int status;
 	if (other_dns_status != 0)
@@ -84,7 +83,6 @@ unsigned short	checksum_interpretation_creation(void *package, int pckg_len, int
 	return result;
 }
 
-
 /*
 La superpotenza di getaddrinfo (la funzione che fa la risoluzione DNS) è che è abbastanza intelligente da capire da sola cosa le stai passando.
 Se chiami getaddrinfo("1.1.1.1", ...) lei si accorge che è già un IP, non interroga il server DNS e ti costruisce direttamente la struttura sockaddr pronta all'uso. Se le passi [www.google.com](https://www.google.com), fa la chiamata DNS.
@@ -96,7 +94,7 @@ significa che il valore passato da terminale è già un ip 1.1.1.1
 
 ma alla fine questa funzione non mi serve getaddrinfo fa l'heavy lifting
 */
-int		is_dns_needed(t_dest_packet *packet)
+int		is_dns_needed(t_dest_data *packet)
 {
 	if (inet_pton(AF_INET, packet->dns_name, &(packet->dest)) == 1)
 	{
@@ -109,5 +107,6 @@ int		is_dns_needed(t_dest_packet *packet)
 		return 0;
 	}
 }
+
 
 

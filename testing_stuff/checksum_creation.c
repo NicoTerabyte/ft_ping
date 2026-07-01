@@ -22,6 +22,18 @@ lo sommo a 0x0001ABC5 che con & 0xFFFF diventa 0xABC5
 
 l'algoritmo prende spunto dal RFC 1071
 
+ciao mondo
+
+char = 1byte = 8 bit
+2 byte = short unsigned
+
+
+0x0001ffff
+
+0x0001ffff 0x0001 + 0xffff
+>> 16 0x0001ffff = 0x00000001
+0x0001ffff = 0x0000ffff
+
 
 */
 

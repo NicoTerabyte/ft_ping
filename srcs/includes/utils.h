@@ -4,10 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <error.h>
+#include <sys/poll.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
 #include <time.h>
+#include <asm-generic/errno.h>
+#include <errno.h>
 // ------- socket programming --------
 #include <sys/socket.h>
 #include <netdb.h>
@@ -19,15 +22,14 @@
 // FONDAMENTALE CAVACCA
 // ------- icmp package -------
 #include <netinet/ip_icmp.h>
-
-
-
 // ----------------------------
-
 // -------- mandatory? --------
 #include <linux/if_ether.h>
 // ----------------------------
-
+// -------- to put socket in no-blocking --------
+#include <fcntl.h>
+#include <poll.h>
+// ----------------------------
 // -------- signals --------
 #include <signal.h>
 // ----------------------------
@@ -38,6 +40,8 @@
 #define REDIRECT_MESSAGE  5
 #define TIME_EXCEEDED     11
 #define PARAMETER_PROBLEM 12
+#define PCKG_PING_S       64
+
 
 #define SHREK " ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀           ⢀⣀⣠⣤⣤⣤⣤⣤⣄⣀\n\
 ⠀⠀⢀⣴⣶⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡴⠶⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⠶⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n\
@@ -223,36 +227,45 @@ in realtà fino ad ora la struct è stata utilizzata con lo scopo di fare da def
 non vengono mai usati per creare il pacchetto che verrà poi inviato al destinatario stesso
 */
 
-typedef struct s_dest_dest_packet
+typedef struct s_dest_data
 {
 //--------- Special types ---------
-	struct sockaddr			saddr;
 	struct sockaddr_in		*dest; // dest sarebbe la conversione del argv all'effettivo come destinatario del pacchetto, questo grazie a dns lookup
 	struct iphdr			*ip; //this is used to get the ip header
 	struct addrinfo			hints, *result;
 	//hints fa da filtro. result penso sia autoesplicativo,
 //---------------------------------
-
 	int						sock_r; // praticamente il fd del socket
-	unsigned char			buffer_packet[64]; // literally the packet content
-	ssize_t					buflen; //ancora un mistero aahahah
-
 	//--------- for reverse dns lookup ---------
 	char					fqdn[NI_MAXHOST]; // reverse dns lookup
 	//--------- for dns lookup ---------
 	char					*dns_name; //argv[1]
 	char					dns_ip[INET_ADDRSTRLEN]; //reperito in caso debba fare dns_lookup normalizzato a stringa per comodità
-} t_dest_packet;
+} t_dest_data;
 
 
-/*
-i have to better understand how the ping setup is made
-*/
 typedef struct s_icmp_packet_to_send
 {
 	struct	icmphdr icmp_packet;
-	char	*payload;
+	char	packet_content[PCKG_PING_S];
 }t_icmp_packet_to_send;
+
+/*
+questa struct ha l'obiettivo di gestire come si comporta il mittente
+(io) con la risposta del pacchetto, essenzialmente contiene le variabili essenziali
+che servono come gestore di rapporto o comunque "status checker" tra mittente e destinatario
+*/
+typedef struct s_connection_and_package_manager
+{
+	ssize_t						res_of_receiving;
+	ssize_t						res_of_message;
+	char						answer[1024];
+	struct sockaddr				answerer_to_ping;
+	socklen_t					answer_addr_len;
+
+	struct pollfd				traffic_manager;
+	int							poll_status;
+}t_communication_manager;
 
 //! do not use for project, it is just for testing
 typedef struct s_raw_socket_sniffer_packet
@@ -273,27 +286,29 @@ typedef struct s_raw_socket_sniffer_packet
 } t_raw_socket_sniffer_packet;
 
 //--------- ICMP RELATED ---------
-int		icmp_dest_socket_setup(t_dest_packet *packet, char* dns_name); //!add dns attr
-void	print_eth(t_raw_socket_sniffer_packet *packet);
-int		dns_lookup(t_dest_packet *packet);
-int		reverse_dns_lookup(t_dest_packet *packet, int other_dns_status);
-void	icmp_packet_to_send_setup(t_icmp_packet_to_send *packet_to_send);
+int				icmp_dest_socket_setup(t_dest_data *packet, char* dns_name); //!add dns attr
+void			print_eth(t_raw_socket_sniffer_packet *packet);
+int				dns_lookup(t_dest_data *packet);
+int				reverse_dns_lookup(t_dest_data *packet, int other_dns_status);
+void			icmp_packet_to_send_setup(t_icmp_packet_to_send *packet_to_send);
 
 //------------- UTILS -------------------
-void	sighandler(int signum);
-void	free_anything(t_dest_packet *packet, int dns_status);
-void	setup_packet_to_zero(t_dest_packet *packet);
+void			sighandler(int signum);
+void			free_anything(t_dest_data *packet, int dns_status);
+void			setup_dest_data_to_zero(t_dest_data *packet);
 
 //------------- raw socket related --------------
-int		raw_socket_setup(t_raw_socket_sniffer_packet *packet);
-int		setup_raw_socket(t_raw_socket_sniffer_packet *packet);
-
-int		receive_raw_data(t_raw_socket_sniffer_packet *packet);
-void	free_anything_raw_socket(t_raw_socket_sniffer_packet *packet);
-void	extract_ip_header_from_raw_packet(t_raw_socket_sniffer_packet *packet);
+int				raw_socket_setup(t_raw_socket_sniffer_packet *packet);
+int				setup_raw_socket(t_raw_socket_sniffer_packet *packet);
+int				receive_raw_data(t_raw_socket_sniffer_packet *packet);
+void			free_anything_raw_socket(t_raw_socket_sniffer_packet *packet);
+void			extract_ip_header_from_raw_packet(t_raw_socket_sniffer_packet *packet);
 
 //------------- PACKAGE RELATED --------------
 unsigned short	checksum_interpretation_creation(void *package, int pckg_len, int mode, unsigned int s_checksum);
+int				print_msg_rec_data(struct sockaddr *sender, size_t package_size, int seq, t_dest_data destinatary);
+void			communication_manager_setup(t_communication_manager *manager, int sock_to_monitor);
+int				package_message_loop(t_communication_manager *betweener, t_dest_data *dest, int seq);
 
 
 #endif
