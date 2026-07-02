@@ -330,14 +330,14 @@ icmp->checksum = calculate_checksum(icmp, packet_size);
 
 la sequence non mi torna affatto, capisco il type mi serve per comunicare con il destinatario, il codice è per definire il tipo di pacchetto nel network (forse).
 l'id è per tenere traccia del processo che sta facendo la request
-la sequenza boh?
+la sequenza è solo un counter per gestire la quantità di pacchetti inviati (che siano ricevuti o meno)
 il checksum lo sappiamo molto bene.
 
 Ok il RFC pare bello particolare. Vediamo il rapporto con il protocollo in confronto a (🆗 = capito)
 gateway ❌ non so su che rete lavori
 checksum 🆗
 datagram (com'è costruito il pacchetto) 🆗
-inviare e ricevere ❌
+inviare e ricevere 🆗
 
 pare che il RFC dica di dire quando una destinazione non sia raggiungibile anche se ping si appende
 
