@@ -40,7 +40,7 @@
 #define REDIRECT_MESSAGE  5
 #define TIME_EXCEEDED     11
 #define PARAMETER_PROBLEM 12
-#define PCKG_PING_S       64
+#define PCKG_PING_S       56
 
 
 #define SHREK " ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀           ⢀⣀⣠⣤⣤⣤⣤⣤⣄⣀\n\
@@ -246,7 +246,7 @@ typedef struct s_dest_data
 
 typedef struct s_icmp_packet_to_send
 {
-	struct	icmphdr icmp_packet;
+	struct	icmphdr icmp_header;
 	char	packet_content[PCKG_PING_S];
 }t_icmp_packet_to_send;
 
@@ -306,7 +306,7 @@ void			extract_ip_header_from_raw_packet(t_raw_socket_sniffer_packet *packet);
 
 //------------- PACKAGE RELATED --------------
 unsigned short	checksum_interpretation_creation(void *package, int pckg_len, int mode, unsigned int s_checksum);
-int				print_msg_rec_data(struct sockaddr *sender, size_t package_size, int seq, t_dest_data destinatary);
+int				print_msg_rec_data(t_communication_manager *betweener, int seq, t_dest_data destinatary);
 void			communication_manager_setup(t_communication_manager *manager, int sock_to_monitor);
 int				package_message_loop(t_communication_manager *betweener, t_dest_data *dest, int seq);
 

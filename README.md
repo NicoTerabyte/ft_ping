@@ -17,7 +17,7 @@ Tipo 8bit- Codice 8bit - checksum 16bit
         extended header 32bit
 data_payload (size definita da utente)
 
-![alt text](/img_for_readme/icmp_packet.png)
+![alt text](/img_for_readme/icmp_header.png)
 
 l'icmp pare in grado di generare questi "quench messages" che servono a scartare i pacchetti che sono andati persi o hanno fallito in qualche modo
 
@@ -405,7 +405,41 @@ void	print_msg_rec_data(struct sockaddr *sender, size_t package_size, int seq, t
 il metodo lacca ancora di qualcosa, i bytes di risposta sono incorretti.
 
 ho appena scoperto che a sendto frega il cavolo se un pacchetto segue un protocollo? Damn non sapevo
-cioè puoi mandare una struct con i suoi dati dentro e lui da solo la invia, ecco come si manda il payload
+cioè puoi mandare una struct con i suoi dati dentro e lui da solo la invia, ecco come si manda il payload. Per essere più chiari e concisi:
+
+noi abbiamo la nostra struct
+
+```c
+typedef struct s_icmp_packet_to_send
+{
+	struct	icmphdr icmp_header;
+	char	packet_content[PCKG_PING_S];
+}t_icmp_packet_to_send;
+```
+
+il primo elemento "icmp_header" è l'header del pacchetto, serve a far capire al destinatario
+**come vogliamo** comunicare con lui.
+La seconda variabile "packet_content" è il payload, nel nostro caso dev'essere SEMPRE 64 bytes, altrimenti il pacchetto, non viene riconosciuto come pacchetto ICMP,
+
+_cosa sbagliavo?_ semplicemente con sendto all'inizio mandavo solo l'header, e lui per miracolo mi rispondeva, questo perché il contenuto del payload è **facoltativo**.
+Ma anche quando mandavo il payload i conti non tornavano mi tornava un pacchetto di 92 bytes?
+da dove arrivano questi extra 28 bytes? In realtà la spiegazione è nel messaggio in se.
+quando inviamo il pacchetto esso è composto da un payload (64 bytes) e l'header (8 bytes) che fa 72 bytes.
+Questo è costruito da noi non si può sbagliare su di ciò.
+quegli extra 20 bytes in realtà sono **l'header del protocollo ipv4**, che servono per capire come comunicare sulla rete, visto che siamo al livello 3, infatti se andiamo a vedere il pacchetto
+ICMP nel dettaglio con setup ipv4
+
+![ICMP con ipv4](./img_for_readme/packet_to_send.png)
+
+quindi si i conti tornano 64+8+20 = 92, se vogliamo **isolare** il payload dobbiamo sbarazzarci
+dei due header purtroppo per noi è tutto salvato nel buffer che viene modificato in ricezione, quindi
+ci sono 2 cose da fare:
+1. castare il puntatore al buffer a ip e reperire in base al protocollo di rete (IPV4) la lunghezza del payload
+2. castare nuovamente il puntatore al buffer **sommarla** alla lunghezza dell'header ipv4 per reperire la grandezza dell'header icmp.
+
+infine facciamo una sottrazione della risposta con i due header, così abbiamo la grandezza del pacchetto finale. se la grandezza è uguale al numero di bytes inviati, il pacchetto è coerente.
+
+un  bel casino ma finalmente ho capito porca vacca
 
 ## gestire gli errori come un pro in C
 

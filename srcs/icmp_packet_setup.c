@@ -54,17 +54,24 @@ int	icmp_dest_socket_setup(t_dest_data *packet, char *dns_name)
 }
 
 
+/*
+IMPORTANT
+the checksum must be empty in order to make it work
+to avoid garbage in the var itself i have to set it to 0
+*/
 
 void	icmp_packet_to_send_setup(t_icmp_packet_to_send *packet_to_send)
 {
 	memset(packet_to_send->packet_content, 0, sizeof(packet_to_send->packet_content));
-	packet_to_send->icmp_packet.type = ECHO_REQUEST;
-	packet_to_send->icmp_packet.code = 0;
-	packet_to_send->icmp_packet.un.echo.id = htons(getpid());
-	packet_to_send->icmp_packet.un.echo.sequence = 1;
-	packet_to_send->icmp_packet.checksum = checksum_interpretation_creation(&packet_to_send->icmp_packet, sizeof(packet_to_send->icmp_packet), 0, 0);
+	packet_to_send->icmp_header.type = ECHO_REQUEST;
+	packet_to_send->icmp_header.code = 0;
+	packet_to_send->icmp_header.un.echo.id = htons((uint16_t)getpid());
+	packet_to_send->icmp_header.un.echo.sequence = 1;
+	packet_to_send->icmp_header.checksum = 0; //IMPORTANT
 
-	printf("message size %zu icmp packet size %zu\n", sizeof(packet_to_send->packet_content), sizeof(packet_to_send->icmp_packet));
+	packet_to_send->icmp_header.checksum = checksum_interpretation_creation(packet_to_send, sizeof(*packet_to_send), 0, 0);
+
+	printf("message size %zu icmp packet size %zu\n", sizeof(packet_to_send->packet_content), sizeof(packet_to_send->icmp_header));
 }
 
 //this function is not used anymore, it is for raw sockets

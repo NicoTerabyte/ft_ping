@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	t_dest_data					destinatary_data;
 	t_communication_manager		betweener; // handler of te communication between me and the dest
 	int 						res_of_dns; //status
-	int							seq; // counter di pacchetti
+	int							seq = 1; // counter di pacchetti
 	// struct timeval				tv; //TODO calculate time
 
 	signal(SIGINT, sighandler);
@@ -76,8 +76,6 @@ int main(int argc, char **argv)
 
 	res_of_dns = reverse_dns_lookup(&destinatary_data, res_of_dns); // pare ok
 
-	printf("resolution of dns went: %d\n", res_of_dns);
-
 	if (res_of_dns == 0)
 		printf("%s", OK_CHECKOUT);
 	else
@@ -90,7 +88,7 @@ int main(int argc, char **argv)
 
 	icmp_packet_to_send_setup(&packet_to_send);
 
-	seq = 1;
+
 	printf("PING %s (%s) %zu(84) bytes of data\n", destinatary_data.dns_name, destinatary_data.dns_ip, sizeof(packet_to_send.packet_content));
 
 	communication_manager_setup(&betweener, destinatary_data.sock_r);

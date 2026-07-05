@@ -5,6 +5,8 @@
 #include <unistd.h>
 
 
+
+
 /*
 This method is made in order to get the real answer we are focusing on
 quoting an article regarding the ping behavior
@@ -17,48 +19,65 @@ if i wouldn't take the icmp only the packet would be too big.
 the guy added
 "The IP header length is variable (20–60 bytes), so you have to parse it correctly to find your ICMP data"
 
+i have to get the buffer to do what i have to do (the answer itself contains the header and all)
+
+ip_len is the header of the packet, we don't needed it
+
+remember
+ipv4 header = 20 bytes
+icmp header = 8 bytes
+payload content = 64 bytes
+
+sendto has sent 72 (64 + 8)
 */
-
-static void strip_sender_ip(struct sockaddr *sender, struct icmphdr *real_packet)
+static int remove_headers_and_get_packet_size(t_communication_manager *betweener)
 {
-	struct ip *ip_header = (struct ip *)sender;
-	int ip_len = ip_header->ip_hl * 4; //header len i bytes
+	struct ip *ip_header = (struct ip *)&betweener->answer;
+	int ip_len = ip_header->ip_hl * 4;
+	struct icmphdr *real_packet = 0;
 
-	real_packet = (struct icmphdr *)(sender + ip_len);
+	real_packet = (struct icmphdr *)(betweener->answer + ip_len);
+	printf("my pid %d, packet pid %d\n",(uint16_t)getpid(), ntohs(real_packet->un.echo.id));
 
-	printf("my pid %d, packet pid %d\n", getpid(), ntohs(real_packet->un.echo.id));
-	printf("possible packet lenght? %d\n", ip_len);
+
+	return (((betweener->res_of_receiving - ip_len)));
 }
+
+
 
 /*
 this functions print some packet statistic, size and all, and checks if
 whoever answered is the same that we are trying to comunicate with
+
+the size of the packet is not well defined i have to change it later (i mean the use of the var res_of_receiving)
+
+it's to rework because it's the packet itself that needs to be shifted to get the icmp sign
+
+i need to check the pids correctly, how though, i have to separate the packet size and the
+icmp pid 2 functions
+
 */
-int		print_msg_rec_data(struct sockaddr *sender, size_t package_size, int seq, t_dest_data destinatary)
+int		print_msg_rec_data(t_communication_manager *betweener, int seq, t_dest_data destinatary)
 {
 	char				sender_ip[1024];
-	struct sockaddr_in	*ipv4_caster;
-	struct	icmphdr		*real_packet = 0;
-	// uint16_t			answerer_pid;
-	ipv4_caster = (struct sockaddr_in *)sender;
-	strip_sender_ip(sender, real_packet);
-	if (sender)
+	struct	sockaddr_in	*ipv4_caster;
+
+	ipv4_caster = (struct sockaddr_in *)&betweener->answerer_to_ping;
+
+	memset(sender_ip, 0, sizeof(sender_ip));
+	inet_ntop(AF_INET, &(ipv4_caster->sin_addr), sender_ip, INET_ADDRSTRLEN);
+	if (strcmp(sender_ip, destinatary.dns_ip) == 0)
 	{
-		memset(sender_ip, 0, sizeof(sender_ip));
-		inet_ntop(AF_INET, &(ipv4_caster->sin_addr), sender_ip, INET_ADDRSTRLEN);
-		if (strcmp(sender_ip, destinatary.dns_ip) == 0)
-		{
-			printf("%zu bytes from %s: icmp_seq=%d\n", package_size, sender_ip, seq);
-			return 1;
-		}
-		else
-		{
-			printf("someone %s is answering instead of the destinatary %s\n", sender_ip, destinatary.dns_ip);
-			return -1;
-		}
+		printf("%d bytes from %s: icmp_seq=%d\n", remove_headers_and_get_packet_size(betweener), sender_ip, seq);
+		return 1;
 	}
 	else
-		printf("The  address of the sender is not defined uknown answerer\n");
+	{
+		printf("someone %s is answering instead of the destinatary %s\n", sender_ip, destinatary.dns_ip);
+		return -1;
+	}
+
+	// printf("The  address of the sender is not defined uknown answerer\n");
 	return -1;
 }
 
@@ -84,7 +103,7 @@ int		package_message_loop(t_communication_manager *betweener, t_dest_data *dest,
 			betweener->res_of_receiving = recvfrom(dest->sock_r, &betweener->answer, sizeof(betweener->answer), 0, &betweener->answerer_to_ping, &betweener->answer_addr_len);
 			if (betweener->res_of_receiving != -1)
 			{
-				if (print_msg_rec_data(&betweener->answerer_to_ping, betweener->res_of_receiving, seq, *dest) == 1)
+				if (print_msg_rec_data(betweener, seq, *dest) == 1)
 					return 1;
 				continue;
 			}
@@ -97,7 +116,7 @@ int		package_message_loop(t_communication_manager *betweener, t_dest_data *dest,
 		else if (betweener->poll_status == 0)
 		{
 			printf("request timeout\n");
-			return -1;
+			return -2;
 		}
 		else
 		{
