@@ -67,7 +67,7 @@ void	icmp_packet_to_send_setup(t_icmp_packet_to_send *packet_to_send)
 	packet_to_send->icmp_header.code = 0;
 	packet_to_send->icmp_header.un.echo.id = htons((uint16_t)getpid());
 	packet_to_send->icmp_header.un.echo.sequence = 1;
-	packet_to_send->icmp_header.checksum = 0; //IMPORTANT
+	packet_to_send->icmp_header.checksum = 0; //IMPORTANT always have it a zero before calculating it
 
 	packet_to_send->icmp_header.checksum = checksum_interpretation_creation(packet_to_send, sizeof(*packet_to_send), 0, 0);
 

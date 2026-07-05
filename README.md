@@ -316,19 +316,18 @@ ci basta prendere il checksum calcolato passarlo ad una funzione che essenzialme
 
 ## Come costruire il pacchetto?
 
-il pacchetto icmp della struttura icmp ha dei pezzi fondamentali
+il pacchetto icmp della struttura icmp ha dei pezzi fondamentali (UPDATE)
 
 ```c
 struct icmphdr icmp;
 icmp->type = ICMP_ECHO;           // Echo Request
 icmp->code = 0;                   // Always 0 for ping
-icmp->un.echo.id = getpid();      // Process ID
+icmp_header.un.echo.id = htons((uint16_t)getpid()); // Process ID it has 16 bit format getpid gives you a 32 bit ones keep it in mind 🧠
 icmp->un.echo.sequence = seq++;   // Sequence number parte da 1 (non c'è scritto ma pare così)
 icmp->checksum = calculate_checksum(icmp, packet_size);
-
+char payload[56 bytes]
 ```
 
-la sequence non mi torna affatto, capisco il type mi serve per comunicare con il destinatario, il codice è per definire il tipo di pacchetto nel network (forse).
 l'id è per tenere traccia del processo che sta facendo la request
 la sequenza è solo un counter per gestire la quantità di pacchetti inviati (che siano ricevuti o meno)
 il checksum lo sappiamo molto bene.
@@ -340,6 +339,8 @@ datagram (com'è costruito il pacchetto) 🆗
 inviare e ricevere 🆗
 
 pare che il RFC dica di dire quando una destinazione non sia raggiungibile anche se ping si appende
+
+fai attenzione alla conversione dell'id del pacchetto altrimenti rischi di giocartelo nel calcolo della checksum
 
 ## Socket programming l'abc delle funzioni (cheatsheet)
 
@@ -439,7 +440,8 @@ ci sono 2 cose da fare:
 
 infine facciamo una sottrazione della risposta con i due header, così abbiamo la grandezza del pacchetto finale. se la grandezza è uguale al numero di bytes inviati, il pacchetto è coerente.
 
-un  bel casino ma finalmente ho capito porca vacca
+
+
 
 ## gestire gli errori come un pro in C
 
