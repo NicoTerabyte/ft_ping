@@ -58,6 +58,8 @@ int	icmp_dest_socket_setup(t_dest_data *packet, char *dns_name)
 IMPORTANT
 the checksum must be empty in order to make it work
 to avoid garbage in the var itself i have to set it to 0
+
+the id of the var must be ready to be read
 */
 
 void	icmp_packet_to_send_setup(t_icmp_packet_to_send *packet_to_send)

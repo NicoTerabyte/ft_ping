@@ -110,6 +110,6 @@ int main(int argc, char **argv)
 	printf("--- %s ping statistics ---\n", argv[1]);
 	free_anything(&destinatary_data, 0);
 	close(destinatary_data.sock_r);
-	printf("finito\n %s", ending);
+	printf("all close\n %s", ending);
 	return (0);
 }

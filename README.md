@@ -68,26 +68,26 @@ RED := e[1;31m
 # $@ stands for the target literally "objs/%.o" and $< stands for the requisite "srcs/%.c
 
 objs/%.o: srcs/%.c
-	@echo "$(GREEN)file object compilation$(RESET)"
-	@mkdir -p $(dir $@)OBJS
-	$(COMPILING_RULES) $(FLAGS) -c $< -o $@
+    @echo "$(GREEN)file object compilation$(RESET)"
+    @mkdir -p $(dir $@)OBJS
+    $(COMPILING_RULES) $(FLAGS) -c $< -o $@
 
 
 all: $(PROGRAM_NAME)
 
 $(PROGRAM_NAME): $(OBJS)
-	@echo "$(GREEN)program name rule$(RESET)"
-	$(COMPILING_RULES) $(FLAGS) $(OBJS) -o $(PROGRAM_NAME)
+    @echo "$(GREEN)program name rule$(RESET)"
+    $(COMPILING_RULES) $(FLAGS) $(OBJS) -o $(PROGRAM_NAME)
 
 
 clean:
-	@echo "$(GREEN)cleaning directory of objs$(RESET)"
-	rm -rf objs
+    @echo "$(GREEN)cleaning directory of objs$(RESET)"
+    rm -rf objs
 
 
 fclean: clean
-	@echo "$(GREEN)removing every file created by Makefile$(RESET)"
-	rm -f $(PROGRAM_NAME)
+    @echo "$(GREEN)removing every file created by Makefile$(RESET)"
+    rm -f $(PROGRAM_NAME)
 
 re: fclean all
 
@@ -103,7 +103,7 @@ uff tosta eh ma non sconcetrarti adesso. Quindi ricorda: Le variabili sono strin
 
 Comunque per darti un'idea una regola in makefile è strutturata così
 Target: requisito
-	regole per creare target $(requisito)
+    regole per creare target $(requisito)
 
 Ci sono delle piccolezze da ricordarsi quando si fa un makefile
 1. Il makefile se viene invocato normalmente, quindi solo make, andrà dall'alto verso il basso eseguendo le regole target in ordine
@@ -118,7 +118,7 @@ la regola successiva per esempio all ha bisogno di PROGRAM_NAME per funzionare �
 hai visto $@ $< rispettivamente uno rappresenta il target e l'altro il requisito
 Quindi se io avessi
 Target: requisito
-	echo $@ $<
+    echo $@ $<
 
 mi stamperebbe Target requisito. è comodo perché quando hai una wildcard %.c ti rappresenta come si deve ogni singolo file di interesse
 per aiutarti ecco un mini esempio.
@@ -180,17 +180,17 @@ il mio main:
 ```c
 typedef struct s_raw_socket_sniffer_packet
 {
-	//--------- Special types ---------
-	struct sockaddr			saddr;
-	struct sockaddr_in		source, dest; // they are meant to be used to get the ip
-	struct ethhdr			*eth; //this IS the ethernet header NOT USEFUL FOR THIS PROJECT
-	struct iphdr			*ip; //this is used to get the ip header
-	//---------------------------------
+    //--------- Special types ---------
+    struct sockaddr			saddr;
+    struct sockaddr_in		source, dest; // they are meant to be used to get the ip
+    struct ethhdr			*eth; //this IS the ethernet header NOT USEFUL FOR THIS PROJECT
+    struct iphdr			*ip; //this is used to get the ip header
+    //---------------------------------
 
-	int						sock_r;
-	unsigned char			*buffer; // for ethernet header
-	ssize_t					buflen;
-	char					*dns;
+    int						sock_r;
+    unsigned char			*buffer; // for ethernet header
+    ssize_t					buflen;
+    char					*dns;
 } t_raw_socket_sniffer_packet;
 ```
 
@@ -286,23 +286,23 @@ comunque l'algoritmo di invio da parte del pinger è così
 ```c
 unsigned short	sender_checksum(void *package, int pckg_len)
 {
-	unsigned int sum=0; // 32 bit
-	unsigned short result; // 16 bit
-	unsigned short *buf = package; // 16 bit
+    unsigned int sum=0; // 32 bit
+    unsigned short result; // 16 bit
+    unsigned short *buf = package; // 16 bit
 
-	for (sum = 0; pckg_len > 1; pckg_len -= 2)
-		sum += *buf++;
+    for (sum = 0; pckg_len > 1; pckg_len -= 2)
+        sum += *buf++;
 
-	if (pckg_len == 1)
-		sum+= *(unsigned char*)buf;
+    if (pckg_len == 1)
+        sum+= *(unsigned char*)buf;
 
-	// qualsiasi valore carry viene shiftato a destra
-	// e sommato al valore originale mascherato che toglie i vecchi carry
-	sum = (sum >> 16) + (sum & 0xFFFF);
-	sum += (sum >> 16);
+    // qualsiasi valore carry viene shiftato a destra
+    // e sommato al valore originale mascherato che toglie i vecchi carry
+    sum = (sum >> 16) + (sum & 0xFFFF);
+    sum += (sum >> 16);
 
-	result = ~sum;
-	return result;
+    result = ~sum;
+    return result;
 }
 ```
 
@@ -354,6 +354,13 @@ recv
 recvfrom (gemella di sendto bloccante)
 inet_ntop -> da rivedere
 
+### Conversioni endianess [TO UPDATE]
+
+htons
+ntohs
+htonl
+ntohl
+
 ## ricevere il dato (poll)
 
 recvfrom è il metodo per capire se il pacchetto inviato sta lavorando a dovere, riceve in quantità, il numero di bytes con cui il nostro destinatario risponde,
@@ -364,11 +371,9 @@ il problema di questo fattore bloccante, è che praticamente se fallisse qualche
 Questo perché a livello di funzionalità recvfrom al compito di ricevere, non a un timer interno
 che gli permette di decidere **quanto tempo deve aspettare**.
 
-
-
 ## l'iceberg della conversione dei socket e inet_ntop che mi tradisce
 
-allora, siamo arrivati indubbiamente a buon punto, il messaggio va, c'è un feedback, quindi no timeout, e ora ci basta capire se chi ha risposto è lo stesso con cui volevamo comunicare.
+Allora, siamo arrivati indubbiamente a buon punto, il messaggio va, c'è un feedback, quindi no timeout, e ora ci basta capire se chi ha risposto è lo stesso con cui volevamo comunicare.
 Una semplice stampa no? ahahahah col cavolo, grazie a recvfrom siamo in grado di mettere in un contenitore colui che risponde al nostro ping, il problema? usa un sockaddr e non un sockaddr_in, perché dev'essere generico e gestire più protocolli. una cosa interessante che però ho imparato è che sockaddr è come l'argilla, può essere plasmato per incastrarsi nel protocollo che più ti interessa
 
 infatti una cosa del genere non è per niente impossibile castando al tipo che ci interessa
@@ -377,44 +382,46 @@ infatti una cosa del genere non è per niente impossibile castando al tipo che c
 ipv4_caster = (struct sockaddr_in *)sender;
 ```
 
-ed è **l'unico modo** che ho trovato per ora per capire con chi stessi comunicando.
+Ed è **l'unico modo** che ho trovato per ora per capire con chi stessi comunicando.
 Ho fatto una piccola funzione apposita per gestire la risposta, o almeno per capire se il destinatario mi HA RISPOSTO
 
 ```c
-void	print_msg_rec_data(struct sockaddr *sender, size_t package_size, int seq, t_dest_data destinatary)
+int print_msg_rec_data(t_communication_manager *betweener, int seq, t_dest_data destinatary)
 {
-	char	sender_ip[1024];
-	struct sockaddr_in	*ipv4_caster;
+    char                sender_ip[1024];
+    struct  sockaddr_in *ipv4_caster;
 
-	ipv4_caster = (struct sockaddr_in *)sender;
+    ipv4_caster = (struct sockaddr_in *)&betweener->answerer_to_ping;
 
-	strip_sender_ip(sender);
-	if (sender)
-	{
-		memset(sender_ip, 0, sizeof(sender_ip));
-		inet_ntop(AF_INET, &(ipv4_caster->sin_addr), sender_ip, INET_ADDRSTRLEN);
-		if (strcmp(sender_ip, destinatary.dns_ip) == 0)
-			printf("%zu bytes from %s: icmp_seq=%d\n", package_size, sender_ip, seq);
-		else
-			printf("someone %s is answering instead of the destinatary %s\n", sender_ip, destinatary.dns_ip);
-	}
-	else
-		printf("The  address of the sender is not defined uknown answerer\n");
+    memset(sender_ip, 0, sizeof(sender_ip));
+    inet_ntop(AF_INET, &(ipv4_caster->sin_addr), sender_ip, INET_ADDRSTRLEN);
+    if (strcmp(sender_ip, destinatary.dns_ip) == 0)
+    {
+        printf("%d bytes from %s: icmp_seq=%d\n", remove_headers_and_get_packet_size(betweener), sender_ip, seq);
+        return 1;
+    }
+    else
+    {
+        printf("someone %s is answering instead of the destinatary %s\n", sender_ip, destinatary.dns_ip);
+        return -1;
+    }
 
+    // printf("The  address of the sender is not defined uknown answerer\n");
+    return -1;
 }
 ```
-il metodo lacca ancora di qualcosa, i bytes di risposta sono incorretti.
 
-ho appena scoperto che a sendto frega il cavolo se un pacchetto segue un protocollo? Damn non sapevo
-cioè puoi mandare una struct con i suoi dati dentro e lui da solo la invia, ecco come si manda il payload. Per essere più chiari e concisi:
+ho appena scoperto che a **sendto** frega il cavolo se un pacchetto segue un protocollo? Damn non sapevo
+cioè puoi mandare una struct con i suoi dati dentro e lui da solo la invia, interessante quindi è così che lavora la rete. Puoi essenzialmente mandare quello che vuoi ad un destinatario, ecco come si manda il payload, mandi tutta la struct che hai creato.
+Per essere più chiari e concisi:
 
 noi abbiamo la nostra struct
 
 ```c
 typedef struct s_icmp_packet_to_send
 {
-	struct	icmphdr icmp_header;
-	char	packet_content[PCKG_PING_S];
+    struct icmphdr icmp_header;
+    char   packet_content[PCKG_PING_S];
 }t_icmp_packet_to_send;
 ```
 
@@ -422,7 +429,7 @@ il primo elemento "icmp_header" è l'header del pacchetto, serve a far capire al
 **come vogliamo** comunicare con lui.
 La seconda variabile "packet_content" è il payload, nel nostro caso dev'essere SEMPRE 64 bytes, altrimenti il pacchetto, non viene riconosciuto come pacchetto ICMP,
 
-_cosa sbagliavo?_ semplicemente con sendto all'inizio mandavo solo l'header, e lui per miracolo mi rispondeva, questo perché il contenuto del payload è **facoltativo**.
+_cosa sbagliavo?_ semplicemente con sendto all'inizio mandavo solo l'header, e lui per miracolo mi rispondeva.
 Ma anche quando mandavo il payload i conti non tornavano mi tornava un pacchetto di 92 bytes?
 da dove arrivano questi extra 28 bytes? In realtà la spiegazione è nel messaggio in se.
 quando inviamo il pacchetto esso è composto da un payload (64 bytes) e l'header (8 bytes) che fa 72 bytes.
@@ -435,6 +442,7 @@ ICMP nel dettaglio con setup ipv4
 quindi si i conti tornano 64+8+20 = 92, se vogliamo **isolare** il payload dobbiamo sbarazzarci
 dei due header purtroppo per noi è tutto salvato nel buffer che viene modificato in ricezione, quindi
 ci sono 2 cose da fare:
+
 1. castare il puntatore al buffer a ip e reperire in base al protocollo di rete (IPV4) la lunghezza del payload
 2. castare nuovamente il puntatore al buffer **sommarla** alla lunghezza dell'header ipv4 per reperire la grandezza dell'header icmp.
 
