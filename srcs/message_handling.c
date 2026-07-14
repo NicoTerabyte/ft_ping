@@ -36,6 +36,7 @@ static int remove_headers_and_get_packet_size(t_communication_manager *betweener
 	int ip_len = ip_header->ip_hl * 4;
 	struct icmphdr *real_packet = 0;
 
+	//does it leak?
 	real_packet = (struct icmphdr *)(betweener->answer + ip_len);
 	printf("my pid %d, packet pid %d\n",(uint16_t)getpid(), ntohs(real_packet->un.echo.id));
 

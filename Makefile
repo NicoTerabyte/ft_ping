@@ -17,7 +17,7 @@ RED   := \e[1;31m
 # would go in an error the % is an expander it matches every file that has a .o or .c
 # YOU HAVE to specify the folder or it would search in the same folder of the makefile
 objs/%.o: srcs/%.c
-	@echo "$(GREEN)file object compilation$(RESET)"
+	@printf "$(GREEN)file object compilation$(RESET)\n"
 	@mkdir -p $(dir $@)
 	$(COMPILING_RULES) $(FLAGS) -c $< -o $@
 
@@ -25,15 +25,15 @@ objs/%.o: srcs/%.c
 all: $(PROGRAM_NAME)
 
 $(PROGRAM_NAME): $(OBJS)
-	@echo "$(GREEN)program name rule$(RESET)"
+	@printf "$(GREEN)program name rule$(RESET)\n"
 	$(COMPILING_RULES) $(FLAGS) $(OBJS) -o $(PROGRAM_NAME)
 
 clean:
-	@echo "$(GREEN)cleaning directory of objs$(RESET)"
+	@printf "$(GREEN)cleaning directory of objs$(RESET)\n"
 	rm -rf objs
 
 fclean: clean
-	@echo "$(GREEN)removing every file created by Makefile$(RESET)"
+	@printf "$(GREEN)removing every file created by Makefile$(RESET)\n"
 	rm -f $(PROGRAM_NAME)
 
 re: fclean all

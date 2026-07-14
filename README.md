@@ -319,18 +319,20 @@ ci basta prendere il checksum calcolato passarlo ad una funzione che essenzialme
 il pacchetto icmp della struttura icmp ha dei pezzi fondamentali (UPDATE)
 
 ```c
+char payload[56 bytes]
 struct icmphdr icmp;
 icmp->type = ICMP_ECHO;           // Echo Request
 icmp->code = 0;                   // Always 0 for ping
 icmp_header.un.echo.id = htons((uint16_t)getpid()); // Process ID it has 16 bit format getpid gives you a 32 bit ones keep it in mind 🧠
 icmp->un.echo.sequence = seq++;   // Sequence number parte da 1 (non c'è scritto ma pare così)
 icmp->checksum = calculate_checksum(icmp, packet_size);
-char payload[56 bytes]
 ```
 
 l'id è per tenere traccia del processo che sta facendo la request
 la sequenza è solo un counter per gestire la quantità di pacchetti inviati (che siano ricevuti o meno)
 il checksum lo sappiamo molto bene.
+il payload è ciò che inseriamo nel pacchetto che vogliamo inviare, può essere qualsiasi cosa, è una stringa di 56 bytes che si
+somma all'header del protocollo ICMP (8 bytes).
 
 Ok il RFC pare bello particolare. Vediamo il rapporto con il protocollo in confronto a (🆗 = capito)
 gateway ❌ non so su che rete lavori
@@ -338,9 +340,10 @@ checksum 🆗
 datagram (com'è costruito il pacchetto) 🆗
 inviare e ricevere 🆗
 
-pare che il RFC dica di dire quando una destinazione non sia raggiungibile anche se ping si appende
+pare che il RFC indichi di avvisare quando una destinazione non sia raggiungibile anche se ping si appende
 
-fai attenzione alla conversione dell'id del pacchetto altrimenti rischi di giocartelo nel calcolo della checksum
+fai attenzione alla conversione dell'id del pacchetto altrimenti rischi di giocartelo nel calcolo della checksum.
+
 
 ## Socket programming l'abc delle funzioni (cheatsheet)
 
@@ -356,10 +359,21 @@ inet_ntop -> da rivedere
 
 ### Conversioni endianess [TO UPDATE]
 
-htons
-ntohs
-htonl
-ntohl
+**Conversioni di endianess**
+htons -> 16 bit (short int)
+ntohs -> 16 bit (short int)
+htonl -> 32 bit (int)
+ntohl -> 32 bit (int)
+
+Allora, queste funzioni in C per la rete sono **Importantissime** Servono per la comunicazione
+e la traduzione dei messaggi da sockaddr a qualcosa di più leggibile in linguaggio umano.
+La cosa che sballa molto la comunicazione con la rete è la endianess perché il computer e la rete lavorano con un ordine diverso:
+il tuo computer (host byte order) = little-endian
+la rete (network byte order) = big endian
+
+essendo che questa incompatibilità è presente tra il computer e la rete entrano in gioco le funzioni elecante sopra semplicemente in base a se stiamo inviando o ricevendo dati usiamo o htons/htonl o ntohs/ntohl
+
+il trucchetto riesiede nel nome della funzione se vuoi mandare un pacchetto alla rete, devi convertirlo da host to newtwork (hton) se arriva dalla rete prima di provarlo a leggere devi convertiro dal network all'host (ntoh)
 
 ## ricevere il dato (poll)
 
@@ -368,8 +382,42 @@ però è una funzione **bloccante** questo significa che quando viene invocata, 
 fino a quando qualcosa non arriva.
 
 il problema di questo fattore bloccante, è che praticamente se fallisse qualche interazione o ci fosse un timeout, non potremmo mai saperlo.
-Questo perché a livello di funzionalità recvfrom al compito di ricevere, non a un timer interno
+Questo perché a livello di funzionalità recvfrom al compito di ricevere, non ha un timer interno
 che gli permette di decidere **quanto tempo deve aspettare**.
+
+Con la funzione poll un fd poll questo problema passa in secondo piano.
+Il poll serve a mettersi in ascolto su di una rete, per attendere un feedback da parte del destinatario che vogliamo contattare.
+è molto semplice da impostare in realtà:
+
+```c
+// innanzitutto creiamo il nostro timer
+struct pollfd timer;
+int           timer_status;
+
+
+//poi immagina che qui hai fatto tutta la logica per inviare il pacchetto con sendto
+sendto(roba)
+
+//ci mettiamo in "polling" quindi aspettiamo che un evento accada per n secondi
+poll(&timer, 1, 2000);
+
+if (timer_status > 0)
+        {
+            //an event arrived logic for handling the event
+        }
+        else if (timer_status == 0)
+        {
+            printf("request timeout\n");
+            return -2;
+        }
+        else
+        {
+            printf("something went wrong while polling.....\n");
+            return -1;
+        }
+```
+
+ci sono anche altri modi per fare un timer per eventi, ma poll mi è sembrato il modo più comodo e facile.
 
 ## l'iceberg della conversione dei socket e inet_ntop che mi tradisce
 
@@ -447,9 +495,6 @@ ci sono 2 cose da fare:
 2. castare nuovamente il puntatore al buffer **sommarla** alla lunghezza dell'header ipv4 per reperire la grandezza dell'header icmp.
 
 infine facciamo una sottrazione della risposta con i due header, così abbiamo la grandezza del pacchetto finale. se la grandezza è uguale al numero di bytes inviati, il pacchetto è coerente.
-
-
-
 
 ## gestire gli errori come un pro in C
 

@@ -59,29 +59,28 @@ int main(int argc, char **argv)
 	signal(SIGINT, sighandler);
 	if (argc <= 1)
 	{
-		printf("Not enough arguments\n");
+		printf("ft_ping: usage error: Destination address required\n");
 		printf("%s", SHREK);
 		exit(0);
 	}
 	setup_dest_data_to_zero(&destinatary_data);
 	if (icmp_dest_socket_setup(&destinatary_data, argv[1]))
 	{
+		printf("ft_ping: ERROR you must be root to run\n");
 		printf("%s", SHREK);
 		free_anything(&destinatary_data, 1);
 		exit(1);
 	}
 
-	printf("tests passed all initialized\n");
-	res_of_dns = dns_lookup(&destinatary_data); // tutto giusto
-
-	res_of_dns = reverse_dns_lookup(&destinatary_data, res_of_dns); // pare ok
+	res_of_dns = dns_lookup(&destinatary_data);
+	res_of_dns = reverse_dns_lookup(&destinatary_data, res_of_dns);
 
 	if (res_of_dns == 0)
 		printf("%s", OK_CHECKOUT);
 	else
 	{
 		free_anything(&destinatary_data, 0);
-		printf("GOOFY AHH ERROR WHILE RESOLVING THE ADDRESS\n");
+		printf("ping: %s: Name or service not known\n", argv[1]);
 		printf(PACKET_ERROR);
 		exit(1);
 	}
@@ -102,11 +101,12 @@ int main(int argc, char **argv)
 			printf("or no internet connection\n");
 			break ;
 		}
+		//Loop for message receiving
 		package_message_loop(&betweener, &destinatary_data, seq);
 		seq++;
 		sleep(1);
 	}
-	//
+
 	printf("--- %s ping statistics ---\n", argv[1]);
 	free_anything(&destinatary_data, 0);
 	close(destinatary_data.sock_r);

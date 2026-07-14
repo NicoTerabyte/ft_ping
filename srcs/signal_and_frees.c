@@ -8,10 +8,12 @@ void sighandler(int signum)
 	loop_var = 1;
 }
 
-//for now when dns_status is one i don't free the packet->result
-//this is a temporary fix since it would give me a segfault if i free it when the dns
-//is not resolved
-//non serve liberare packet->ip_name perché è nello stack
+/*
+for now when dns_status is one i don't free the packet->result
+this is a temporary fix since it would give me a segfault if i free it when the dns
+is not resolved
+non serve liberare packet->ip_name perché è nello stack
+*/
 void	free_anything(t_dest_data *packet, int dns_status)
 {
 	printf("freeing stuff\n");
