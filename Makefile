@@ -5,7 +5,7 @@ C_FILES := $(shell find srcs -name '*.c')
 # find in the C_FILES variable in the srcs directory BUT they are now
 # in the objs directory and called .o
 OBJS := $(C_FILES:srcs/%.c=objs/%.o)
-FLAGS := -Wall -Wextra -Werror -g -ggdb
+FLAGS := -Wall -Wextra -Werror -g -ggdb -lm
 
 GREEN := \e[0;32m
 RESET := \e[0m

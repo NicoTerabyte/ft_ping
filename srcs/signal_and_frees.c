@@ -2,9 +2,9 @@
 
 void sighandler(int signum)
 {
-	printf("Got signal %d ping statistics coming soon....\n", signum);
-	// function to cleanup malloc'd data
-
+	//printf("Got signal %d ping statistics coming soon....\n", signum);
+	//function  to handle ctrl + C signal
+	(void)signum;
 	loop_var = 1;
 }
 
@@ -33,4 +33,35 @@ void	free_anything(t_dest_data *packet, int dns_status)
 		packet->sock_r = -1;
 
 	printf("%s", OK_CHECKOUT);
+}
+
+
+void	print_ping_statistics(t_stats *stats, char *target_name)
+{
+	int loss = 0;
+	double total_time_ms = 0;
+
+	// Ferma il timer e calcola il tempo totale
+	gettimeofday(&stats->end_time, NULL);
+	total_time_ms = (stats->end_time.tv_sec - stats->start_time.tv_sec) * 1000.0 +
+					(stats->end_time.tv_usec - stats->start_time.tv_usec) / 1000.0;
+
+	// Calcolo % di perdita
+	if (stats->packets_transmitted > 0)
+		loss = ((stats->packets_transmitted - stats->packets_received) * 100) / stats->packets_transmitted;
+
+	printf("--- %s ping statistics ---\n", target_name);
+	printf("%ld packets transmitted, %ld received, %d%% packet loss, time %.0fms\n",
+			stats->packets_transmitted, stats->packets_received, loss, total_time_ms);
+
+	// Evita la divisione per zero e stampa i valori rtt
+	if (stats->packets_received > 0)
+	{
+		double avg = stats->rtt_sum / stats->packets_received;
+		double variance = (stats->rtt_sum_sq / stats->packets_received) - (avg * avg);
+		double mdev = sqrt(variance);
+
+		printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n",
+			   stats->rtt_min, avg, stats->rtt_max, mdev);
+	}
 }

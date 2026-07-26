@@ -356,6 +356,10 @@ poll/epoll -> peaking for recv/recvfrom? socket non-bloccante forse
 recv
 recvfrom (gemella di sendto bloccante)
 inet_ntop -> da rivedere
+inet_ptod -> da rivedere
+
+getaddrinfo -> dati relativi al destinatario da stringa o ip (compila una sockaddr apposita)
+getnameinfo -> prende una sockaddr e scopre il nome del dominio (reverse dns)
 
 ### Conversioni endianess [TO UPDATE]
 
@@ -434,7 +438,7 @@ Ed è **l'unico modo** che ho trovato per ora per capire con chi stessi comunica
 Ho fatto una piccola funzione apposita per gestire la risposta, o almeno per capire se il destinatario mi HA RISPOSTO
 
 ```c
-int print_msg_rec_data(t_communication_manager *betweener, int seq, t_dest_data destinatary)
+int package_print_handling(t_communication_manager *betweener, int seq, t_dest_data destinatary)
 {
     char                sender_ip[1024];
     struct  sockaddr_in *ipv4_caster;
@@ -499,3 +503,11 @@ infine facciamo una sottrazione della risposta con i due header, così abbiamo l
 ## gestire gli errori come un pro in C
 
 ziobon
+
+
+## Cosa manca:
+
+- [x] calcolo ttl il pacchetto ip
+- [x] time media pacchetto
+- [ ] min/avg/max packet sent
+- [ ] errori echo reply check per il messaggio ricevuto

@@ -1,5 +1,6 @@
 #include "./includes/utils.h"
 #include <bits/types/struct_timeval.h>
+#include <sys/time.h>
 
 
 
@@ -52,24 +53,55 @@ int main(int argc, char **argv)
 	t_icmp_packet_to_send		packet_to_send;
 	t_dest_data					destinatary_data;
 	t_communication_manager		betweener; // handler of te communication between me and the dest
+	t_stats						stats;
 	int 						res_of_dns; //status
 	int							seq = 1; // counter di pacchetti
-	// struct timeval				tv; //TODO calculate time
+	struct timeval				send_time; //TODO calculate time
+	int							is_verbose = 0;
 
+	memset(&stats, 0, sizeof(t_stats));
 	signal(SIGINT, sighandler);
 	if (argc <= 1)
 	{
 		printf("ft_ping: usage error: Destination address required\n");
 		printf("%s", SHREK);
+		exit(1);
+	}
+	else if (argc == 3 && strcmp(argv[1],"-v") == 0)
+	{
+		is_verbose = 1;
+		if (argc < 3)
+		{
+			printf("ft_ping: usage error: Destination address required\n");
+			printf("%s", SHREK);
+			exit(1);
+		}
+	}
+	else if (strcmp(argv[1], "-?") == 0)
+	{
+		printf("\nUsage\n  ping [options] <destination>\n\nOptions:\n  <destination>      dns name or ip address\n  -v                 verbose output\n  -?                 give this help list\n\n");
 		exit(0);
 	}
 	setup_dest_data_to_zero(&destinatary_data);
-	if (icmp_dest_socket_setup(&destinatary_data, argv[1]))
+	if (is_verbose != 1)
 	{
-		printf("ft_ping: ERROR you must be root to run\n");
-		printf("%s", SHREK);
-		free_anything(&destinatary_data, 1);
-		exit(1);
+		if (icmp_dest_socket_setup(&destinatary_data, argv[1]))
+		{
+			printf("ft_ping: ERROR you must be root to run\n");
+			printf("%s", SHREK);
+			free_anything(&destinatary_data, 1);
+			exit(1);
+		}
+	}
+	else
+	{
+		if (icmp_dest_socket_setup(&destinatary_data, argv[2]))
+		{
+			printf("ft_ping: ERROR you must be root to run\n");
+			printf("%s", SHREK);
+			free_anything(&destinatary_data, 1);
+			exit(1);
+		}
 	}
 
 	res_of_dns = dns_lookup(&destinatary_data);
@@ -80,19 +112,25 @@ int main(int argc, char **argv)
 	else
 	{
 		free_anything(&destinatary_data, 0);
-		printf("ping: %s: Name or service not known\n", argv[1]);
+		printf("ping: %s: Name or service not known\n", destinatary_data.dns_name);
 		printf(PACKET_ERROR);
 		exit(1);
 	}
 
 	icmp_packet_to_send_setup(&packet_to_send);
 
-
+	if (is_verbose == 1)
+	{
+		printf("ping: sock4.fd %d (socktype: SOCK_RAW), hints.ai_family: AF_UNSPEC\n", destinatary_data.sock_r);
+		printf("ping: ai->ai_family: AF_INET ai->canonname: %s\n", destinatary_data.dns_name);
+	}
 	printf("PING %s (%s) %zu(84) bytes of data\n", destinatary_data.dns_name, destinatary_data.dns_ip, sizeof(packet_to_send.packet_content));
 
+	gettimeofday(&stats.start_time, NULL);
 	communication_manager_setup(&betweener, destinatary_data.sock_r);
 	while (loop_var == 0 && betweener.res_of_message != -1)
 	{
+		gettimeofday(&send_time, NULL);
 		betweener.res_of_message = sendto(destinatary_data.sock_r, &packet_to_send, sizeof(packet_to_send), 0, (struct sockaddr*)destinatary_data.dest, sizeof(*destinatary_data.dest));
 
 		if (betweener.res_of_message == -1)
@@ -101,13 +139,16 @@ int main(int argc, char **argv)
 			printf("or no internet connection\n");
 			break ;
 		}
+		else
+			stats.packets_transmitted++;
 		//Loop for message receiving
-		package_message_loop(&betweener, &destinatary_data, seq);
+		package_message_loop(&betweener, &destinatary_data, seq, send_time, is_verbose, &stats);
 		seq++;
 		sleep(1);
 	}
 
-	printf("--- %s ping statistics ---\n", argv[1]);
+	// printf("--- %s ping statistics ---\n", destinatary_data.dns_name);
+	print_ping_statistics(&stats, destinatary_data.dns_name);
 	free_anything(&destinatary_data, 0);
 	close(destinatary_data.sock_r);
 	printf("all close\n %s", ending);
