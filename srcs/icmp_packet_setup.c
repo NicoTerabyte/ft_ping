@@ -11,7 +11,7 @@ void	setup_dest_data_to_zero(t_dest_data	*packet)
 	//packet = malloc(sizeof(t_dest_data));
 	packet->sock_r = 0;
 	packet->dns_name = 0;
-	packet->ip = 0;
+	//packet->ip = 0;
 }
 
 /*
@@ -49,7 +49,7 @@ int	icmp_dest_socket_setup(t_dest_data *packet, char *dns_name)
 	packet->hints.ai_protocol = IPPROTO_ICMP;
 
 	// non l'ho ancora usato
-	packet->ip = calloc(NI_MAXHOST, sizeof(char));
+	// packet->ip = calloc(NI_MAXHOST, sizeof(char));
 	return (0);
 }
 

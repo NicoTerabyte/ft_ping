@@ -26,8 +26,8 @@ void	free_anything(t_dest_data *packet, int dns_status)
 		printf("freeaddrinfo acting");
 		freeaddrinfo(packet->result);
 	}
-	if (packet && packet->ip)
-		free(packet->ip);
+	// if (packet && packet->ip)
+	// 	free(packet->ip);
 
 	if (packet->sock_r >= 0)
 		packet->sock_r = -1;
@@ -41,7 +41,6 @@ void	print_ping_statistics(t_stats *stats, char *target_name)
 	int loss = 0;
 	double total_time_ms = 0;
 
-	// Ferma il timer e calcola il tempo totale
 	gettimeofday(&stats->end_time, NULL);
 	total_time_ms = (stats->end_time.tv_sec - stats->start_time.tv_sec) * 1000.0 +
 					(stats->end_time.tv_usec - stats->start_time.tv_usec) / 1000.0;

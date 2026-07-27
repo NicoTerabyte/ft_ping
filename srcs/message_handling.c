@@ -175,7 +175,7 @@ int		package_print_handling(t_communication_manager *betweener, int seq, struct 
 			stats->rtt_max = total_time;
 
 		//back to printing
-		printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.3f\n", remove_headers_and_get_packet_size(betweener), sender_ip, seq, betweener->retrieved_ttl, total_time);
+		printf("%d bytes from %s: icmp_seq=%d ttl=%d time=%.1f\n", remove_headers_and_get_packet_size(betweener), sender_ip, seq, betweener->retrieved_ttl, total_time);
 		return 1;
 	}
 	else if (packet_type == ICMP_TIME_EXCEEDED)
@@ -206,7 +206,7 @@ int		package_message_loop(t_communication_manager *betweener, t_dest_data *dest,
 {
 	while (1)
 	{
-		betweener->poll_status = poll(&betweener->traffic_manager, 1, 2000);
+		betweener->poll_status = poll(&betweener->traffic_manager, 1, 1000);
 		if (betweener->poll_status > 0)
 		{
 			// printf("packets bytes %zd\n", betweener->res_of_message);

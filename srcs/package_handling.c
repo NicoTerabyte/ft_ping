@@ -19,7 +19,7 @@ int	dns_lookup(t_dest_data *packet)
 {
 	int	client_ip = 0;
 
-	printf("trying to retrieve ip from %s\n", packet->dns_name);
+	// printf("trying to retrieve ip from %s\n", packet->dns_name);
 	client_ip = getaddrinfo(packet->dns_name, NULL, &packet->hints, &
 		packet->result);
 

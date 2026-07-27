@@ -166,35 +166,67 @@ hmp
 time to live [bonus] è una flag.
 Eval sheet -> time to live basso
 
-## Obiettivi
 
-* prima simulazione del comando ping concentrarci sull'invio del messaggio quindi echo 8 e risposta echo 0
-* gestione di raw sockets per sniffing di pacchetti
+## le struttura in breve [TO_FINISH]
 
-## struttura
-
-famo mente locale dai andiamo di logica e vinceremo voglio capire cerco.... **LA VERITÀ**.
-
-il mio main:
+La prima struttura che utilizzo è stata fatta per il parsing del destinatario in fase di uscita.
+Essa è composta da vari componentni ceh ci permettono di prepararci a comunicare con il destinatario inserito in input
 
 ```c
-typedef struct s_raw_socket_sniffer_packet
+typedef struct s_dest_data
 {
-    //--------- Special types ---------
-    struct sockaddr			saddr;
-    struct sockaddr_in		source, dest; // they are meant to be used to get the ip
-    struct ethhdr			*eth; //this IS the ethernet header NOT USEFUL FOR THIS PROJECT
-    struct iphdr			*ip; //this is used to get the ip header
-    //---------------------------------
-
-    int						sock_r;
-    unsigned char			*buffer; // for ethernet header
-    ssize_t					buflen;
-    char					*dns;
-} t_raw_socket_sniffer_packet;
+//--------- Special types ---------
+	struct sockaddr_in		*dest; // dest sarebbe la conversione del argv all'effettivo come destinatario del pacchetto, questo grazie a dns lookup
+	struct iphdr			*ip; //this is used to get the ip header
+	struct addrinfo			hints, *result;
+	//hints fa da filtro. result penso sia autoesplicativo,
+//---------------------------------
+	int						sock_r; // praticamente il fd del socket
+	//--------- for reverse dns lookup ---------
+	char					fqdn[NI_MAXHOST]; // reverse dns lookup
+	//--------- for dns lookup ---------
+	char					*dns_name; //argv[1]
+	char					dns_ip[INET_ADDRSTRLEN]; //reperito in caso debba fare dns_lookup normalizzato a stringa per comodità
+} t_dest_data;
 ```
 
-questa struttura infame, abbiamo anche addrinfo che serve per il provider? Ma fino a che punto?
+ci fa anche comodo sopratutto per mantenere possibili dati in check come il file descriptor del socket risolvere il dns controllare che l'ip o dominio forniteci siano validi, insomma è una struct per la prima serie di controlli prima di instaurare la comunicazione
+
+La struct di relativa al pacchetto ICMP che andiamo ad inviare è la seguente:
+
+```c
+typedef struct s_icmp_packet_to_send
+{
+	struct	icmphdr icmp_header;
+	char	packet_content[PCKG_PING_S];
+}t_icmp_packet_to_send;
+```
+
+è abbastanaza semplice è praticamente il pacchetto che inviamo al mittente definito grazie all'altra struct
+
+Passiamo alla struct che gestisce essenzialmente la risposta del mittente
+
+```c
+typedef struct s_connection_and_package_manager
+{
+	ssize_t						res_of_receiving;
+	ssize_t						res_of_message;
+	char						answer[1024];
+	struct sockaddr				answerer_to_ping;
+	socklen_t					answer_addr_len;
+
+	struct pollfd				traffic_manager;
+	int							poll_status;
+
+	//needed for print
+	uint8_t						retrieved_ttl;
+
+}t_communication_manager;
+```
+
+l'obiettivo di questa classe è quella di gestire la risposta del destinatario confrontandola con quella inviata.
+Controllando la checksum o il pid  di appartenenenza del pacchetto per esempio.
+Anche da sottolineare i dati relativi al timer di risposta e cioè il nostro poll che il communication manager deve gestire per fare in modo che il processo non si concentri solo sull'invio di un pacchetto, in caso infatti passa oltre
 
 ### la risoluzione del dns e il reverse dns
 
@@ -228,7 +260,7 @@ prossima volta facciamo il reverse dns_lookup allora
 
 per chiudere il dubbio di prima, utilizziamo la funzione inet_ntop -> network to presentation, questo permette ad un indirizzo apparentemente in binario di diventare leggibile, stringa/ascii.
 
-## Il checksum del pacchetto
+## Il checksum del pacchetto [FINISHED]
 
 ![jar_guy](/img_for_readme/check_sum_a_real_one.gif)
 
@@ -379,7 +411,7 @@ essendo che questa incompatibilità è presente tra il computer e la rete entran
 
 il trucchetto riesiede nel nome della funzione se vuoi mandare un pacchetto alla rete, devi convertirlo da host to newtwork (hton) se arriva dalla rete prima di provarlo a leggere devi convertiro dal network all'host (ntoh)
 
-## ricevere il dato (poll)
+## ricevere il dato (poll) []
 
 recvfrom è il metodo per capire se il pacchetto inviato sta lavorando a dovere, riceve in quantità, il numero di bytes con cui il nostro destinatario risponde,
 però è una funzione **bloccante** questo significa che quando viene invocata, causa al programma di bloccarsi improvvisamente
@@ -500,7 +532,9 @@ ci sono 2 cose da fare:
 
 infine facciamo una sottrazione della risposta con i due header, così abbiamo la grandezza del pacchetto finale. se la grandezza è uguale al numero di bytes inviati, il pacchetto è coerente.
 
-## gestire gli errori come un pro in C
+## La stampa a fine progamma, la struct s_stats e calcolo rtt
+
+## gestire gli errori come un pro in C (comprendere meglio errno)
 
 ziobon
 
@@ -509,5 +543,5 @@ ziobon
 
 - [x] calcolo ttl il pacchetto ip
 - [x] time media pacchetto
-- [ ] min/avg/max packet sent
-- [ ] errori echo reply check per il messaggio ricevuto
+- [x] min/avg/max packet sent
+- [x] errori echo reply check per il messaggio ricevuto

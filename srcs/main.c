@@ -151,6 +151,6 @@ int main(int argc, char **argv)
 	print_ping_statistics(&stats, destinatary_data.dns_name);
 	free_anything(&destinatary_data, 0);
 	close(destinatary_data.sock_r);
-	printf("all close\n %s", ending);
+	// printf("all close\n %s", ending);
 	return (0);
 }

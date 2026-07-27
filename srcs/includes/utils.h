@@ -231,7 +231,7 @@ typedef struct s_dest_data
 {
 //--------- Special types ---------
 	struct sockaddr_in		*dest; // dest sarebbe la conversione del argv all'effettivo come destinatario del pacchetto, questo grazie a dns lookup
-	struct iphdr			*ip; //this is used to get the ip header
+	// struct iphdr			*ip; //this is used to get the ip header
 	struct addrinfo			hints, *result;
 	//hints fa da filtro. result penso sia autoesplicativo,
 //---------------------------------
