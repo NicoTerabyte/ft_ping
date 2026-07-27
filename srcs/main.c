@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 	if (argc <= 1)
 	{
 		printf("ft_ping: usage error: Destination address required\n");
-		printf("%s", SHREK);
+		// printf("%s", SHREK);
 		exit(1);
 	}
 	else if (argc == 3 && strcmp(argv[1],"-v") == 0)
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 		if (argc < 3)
 		{
 			printf("ft_ping: usage error: Destination address required\n");
-			printf("%s", SHREK);
+			// printf("%s", SHREK);
 			exit(1);
 		}
 	}
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 		if (icmp_dest_socket_setup(&destinatary_data, argv[1]))
 		{
 			printf("ft_ping: ERROR you must be root to run\n");
-			printf("%s", SHREK);
+			// printf("%s", SHREK);
 			free_anything(&destinatary_data, 1);
 			exit(1);
 		}
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 		if (icmp_dest_socket_setup(&destinatary_data, argv[2]))
 		{
 			printf("ft_ping: ERROR you must be root to run\n");
-			printf("%s", SHREK);
+			// printf("%s", SHREK);
 			free_anything(&destinatary_data, 1);
 			exit(1);
 		}
@@ -107,13 +107,13 @@ int main(int argc, char **argv)
 	res_of_dns = dns_lookup(&destinatary_data);
 	res_of_dns = reverse_dns_lookup(&destinatary_data, res_of_dns);
 
-	if (res_of_dns == 0)
-		printf("%s", OK_CHECKOUT);
-	else
+	// if (res_of_dns == 0)
+	// 	printf("%s", OK_CHECKOUT);
+	if (res_of_dns != 0)
 	{
-		free_anything(&destinatary_data, 0);
 		printf("ping: %s: Name or service not known\n", destinatary_data.dns_name);
-		printf(PACKET_ERROR);
+		free_anything(&destinatary_data, 0);
+		// printf(PACKET_ERROR);
 		exit(1);
 	}
 

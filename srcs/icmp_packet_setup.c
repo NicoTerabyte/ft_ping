@@ -36,8 +36,8 @@ int	icmp_dest_socket_setup(t_dest_data *packet, char *dns_name)
 		perror("Error during creation of the socket");
 		return (-1);
 	}
-
 	packet->dns_name = strdup(dns_name);
+
 
 	// ? setup of hints for domain name resolution
 	bzero(&packet->hints, sizeof(packet->hints));

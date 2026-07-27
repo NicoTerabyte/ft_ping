@@ -32,7 +32,7 @@ void	free_anything(t_dest_data *packet, int dns_status)
 	if (packet->sock_r >= 0)
 		packet->sock_r = -1;
 
-	printf("%s", OK_CHECKOUT);
+	// printf("%s", OK_CHECKOUT);
 }
 
 

@@ -26,7 +26,8 @@ int	dns_lookup(t_dest_data *packet)
 	if (client_ip != 0)
 	{
 		fprintf(stderr, "Failure from getaddrinfo in dns_lookup func \n");
-		printf("%s\n", SHREK);
+
+		// printf("%s\n", SHREK);
 		return (EXIT_FAILURE);
 	}
 	packet->dest = (struct sockaddr_in *)packet->result->ai_addr;
@@ -40,8 +41,8 @@ int	reverse_dns_lookup(t_dest_data *packet, int other_dns_status)
 	int status;
 	if (other_dns_status != 0)
 	{
-		printf("SUPER GOOFY DETECTED\n");
-		printf("%s", REVERSE_DNS_ERROR);
+		// printf("SUPER GOOFY DETECTED\n");
+		// printf("%s", REVERSE_DNS_ERROR);
 		return (-1);
 	}
 
