@@ -5,7 +5,7 @@ C_FILES := $(shell find srcs -name '*.c')
 # find in the C_FILES variable in the srcs directory BUT they are now
 # in the objs directory and called .o
 OBJS := $(C_FILES:srcs/%.c=objs/%.o)
-FLAGS := -Wall -Wextra -Werror -g -ggdb -lm
+FLAGS := -Wall -Wextra -Werror -g 
 
 GREEN := \e[0;32m
 RESET := \e[0m
@@ -19,14 +19,14 @@ RED   := \e[1;31m
 objs/%.o: srcs/%.c
 	@printf "$(GREEN)file object compilation$(RESET)\n"
 	@mkdir -p $(dir $@)
-	$(COMPILING_RULES) $(FLAGS) -c $< -o $@
+	$(COMPILING_RULES) $(FLAGS) -c $< -o $@ 
 
 
 all: $(PROGRAM_NAME)
 
 $(PROGRAM_NAME): $(OBJS)
 	@printf "$(GREEN)program name rule$(RESET)\n"
-	$(COMPILING_RULES) $(FLAGS) $(OBJS) -o $(PROGRAM_NAME)
+	$(COMPILING_RULES) $(FLAGS) $(OBJS) -o $(PROGRAM_NAME) -lm
 
 clean:
 	@printf "$(GREEN)cleaning directory of objs$(RESET)\n"
